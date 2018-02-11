@@ -1,0 +1,54 @@
+{
+    "name": "topthink/think",
+    "description": "the new thinkphp framework",
+    "type": "project",
+    "keywords": [
+        "framework",
+        "thinkphp",
+        "ORM"
+    ],
+    "homepage": "http://thinkphp.cn/",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "liu21st",
+            "email": "liu21st@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "topthink/framework": "^5.0",
+        "topthink/think-image": "^1.0",
+        "topthink/think-migration": "^1.0",
+        "topthink/think-captcha": "^1.0",
+        "topthink/think-mongo": "^2.0",
+        "topthink/think-testing": "^1.0",
+        "topthink/think-worker": "^1.0",
+        "topthink/think-helper": "^1.0",
+        "topthink/think-queue": "^1.0",
+        "topthink/think-angular": "^1.0",
+        "firebase/php-jwt": "^4.0",
+        "bluem/tree": "^1.5",
+        "scolib/tree": "^1.0",
+        "jenssegers/mongodb": "^3.2",
+        "bshaffer/oauth2-server-php": "~1.8",
+        "topthink/think-swoole": "^1.0",
+        "guzzlehttp/guzzle": "~6.0",
+        "overtrue/wechat": "^4.0",
+        "riverslei/payment": "~4.0.0",
+        "qiniu/php-sdk": "^7.2",
+        "overtrue/pinyin": "~3.0"
+    },
+    "extra": {
+        "think-path": "thinkphp"
+    },
+    "config": {
+        "preferred-install": "dist"
+    },
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    }
+}
