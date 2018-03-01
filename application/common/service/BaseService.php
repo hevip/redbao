@@ -15,7 +15,6 @@ class BaseService
     ];
     public static function setError(Array $error)
     {
-
         self::$error = $error;
     }
     public static function getError()

@@ -12,7 +12,7 @@ use think\Validate;
 class MyDetail extends Validate
 {
     protected $rule = [
-        'user_id' =>'require|number'
+        'page' =>'require|number'
     ];
 
 }

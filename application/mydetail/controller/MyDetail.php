@@ -17,9 +17,10 @@ class MyDetail extends Api
 
     public function send()
     {
-//        $user = $this->auth['uer_id'] ?? '';
-        $user = Request::instance()->post();
-        $res = MyDetailService::send($user);
+
+        $uid = $this->auth['user_id'] ?? '';
+
+        $res = MyDetailService::send($uid);
         if($res){
             return $this->responseSuccess($res);
         }else{
@@ -29,9 +30,9 @@ class MyDetail extends Api
 
     public function receive()
     {
-//        $user = $this->auth['uid'] ?? '';
-        $user = Request::instance()->post();
-        $res = MyDetailService::receive($user);
+        $uid = $this->auth['user_id'] ?? '';
+
+        $res = MyDetailService::receive($uid);
         if($res){
             return $this->responseSuccess($res);
         }else{
@@ -42,9 +43,34 @@ class MyDetail extends Api
     //提现
     public function cash()
     {
-//        $user = $this->auth['uid'] ?? '';
-        $user = Request::instance()->post();
-        $res = MyDetailService::cash($user);
+
+        $uid = $this->auth['user_id'] ?? '';
+
+        $res = MyDetailService::cash($uid);
+        if($res){
+            return $this->responseSuccess($res);
+        }else{
+            return $this->responseError(MyDetailService::getError());
+        }
+    }
+    //我发出红包的列表
+    public function send_red_list()
+    {
+//        $uid = $this->auth['user_id'] ?? '';
+        $page = Request::instance()->post();
+        $res = MyDetailService::send_red_list($page);
+        if($res){
+            return $this->responseSuccess($res);
+        }else{
+            return $this->responseError(MyDetailService::getError());
+        }
+    }
+    //我收到红包的列表
+    public function received_red_list()
+    {
+//        $uid = $this->auth['user_id'] ?? '';
+        $page = Request::instance()->post();
+        $res = MyDetailService::received_red_list($page);
         if($res){
             return $this->responseSuccess($res);
         }else{

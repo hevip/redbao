@@ -14,10 +14,10 @@ use think\Request;
 
 class Userlist extends Api
 {
-    public function index($page=1)
+    public function index()
     {
         $user = Request::instance()->post();
-        $res = UserlistService::user($page,$user);
+        $res = UserlistService::user($user);
         if($res){
             return $this->responseSuccess($res);
         }else{

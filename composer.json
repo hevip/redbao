@@ -37,7 +37,8 @@
         "overtrue/wechat": "^4.0",
         "riverslei/payment": "~4.0.0",
         "qiniu/php-sdk": "^7.2",
-        "overtrue/pinyin": "~3.0"
+        "overtrue/pinyin": "~3.0",
+        "textalk/websocket": "^1.2"
     },
     "extra": {
         "think-path": "thinkphp"

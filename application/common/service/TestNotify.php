@@ -22,6 +22,7 @@ class TestNotify implements PayNotifyInterface
 {
     public function notifyProcess(array $data)
     {
+
         $channel = $data['channel'];
         if ($channel === Config::ALI_CHARGE) {// 支付宝支付
         } elseif ($channel === Config::WX_CHARGE) {// 微信支付
@@ -30,7 +31,13 @@ class TestNotify implements PayNotifyInterface
         } else {
             // 其它类型的通知
         }
+<<<<<<< HEAD
 
+
+
+=======
+        Log::write('微信支付回调内容：'.json_encode($data));
+>>>>>>> a6f78cb931f3d7a2dec338c45a040209cd284dbe
         //获取用户信息
         $user_data = Db::name('users')->where('user_openid',$data['buyer_id'])->field('user_id')->find();
 

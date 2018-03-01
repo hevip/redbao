@@ -1,17 +1,13 @@
 <?php
-/**
- * Created by PhpStorm.
- * Pay: greatsir
- * Date: 2018/1/26
- * Time: 下午4:20
- */
 namespace app\pay\controller;
 
 use think\Controller;
-
+use app\common\service\PayBackService;
 use Payment\Client\Notify;
 use Payment\Common\PayException;
 use app\common\service\TestNotify;
+use think\Log;
+
 class PayBack extends Controller{
 
     /**
@@ -19,6 +15,8 @@ class PayBack extends Controller{
      **/
     public function pay_success()
     {
+
+        Log::write('回调收到请求,时间是：'.date('Y-m-d H:i:s'));
         //回调验证
         $wxConfig = config('wxpay');
         $callback = new TestNotify();
@@ -33,5 +31,11 @@ class PayBack extends Controller{
             exit;
         }
 
+    }
+
+    public function outTimeBack()
+    {
+
+        $list = payBackService::outTimeBack();
     }
 }

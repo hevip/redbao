@@ -2,32 +2,21 @@
 /**
  * Created by PhpStorm.
  * User: greatsir
- * Date: 17-7-11
- * Time: 下午3:29
+ * Date: 2018/2/22
+ * Time: 下午5:03
  */
 
-namespace app\admin\model;
+namespace app\red\model;
+
 
 use think\Model;
-use traits\model\SoftDelete;
-class Userlist extends Model
-{
-    use SoftDelete;
-    protected $deleteTime = 'is_del';
-    protected $autoWriteTimestamp = true;
-    protected $createTime = 'create_time';
-    protected $updateTime = false;
-    // 定义全局的查询范围 未删除
-    protected function base($query)
-    {
-        $query->where('is_del','=',0);
-    }
-    public function modules()
-    {
-        return $this->belongsToMany('app\\common\\model\\SystemModule','app\\common\\model\\RoleModule','mod_id','role_id');
-    }
-    public function find($user)
-    {
 
+class Red extends Model
+{
+    protected $name='send';
+
+    public function getUserInfo()
+    {
+        return $this->hasOne('app\users\model\User','user_id','user_id')->field('user_id,user_name,user_icon');
     }
 }

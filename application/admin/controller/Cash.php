@@ -9,6 +9,7 @@ namespace app\admin\controller;
 
 use app\common\controller\Api;
 use anu\SingleFactory;
+use App\Http\Controllers\Controller;
 use think\Request;
 use app\admin\service\CashService;
 
@@ -40,4 +41,5 @@ class Cash extends Api
             return $this->responseError(CashService::getError());
         }
     }
+
 }

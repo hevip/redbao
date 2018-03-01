@@ -44,6 +44,7 @@ class WxTransfer extends WxBaseStrategy
     protected function curlPost($xml, $url)
     {
         $curl = new Curl();
+
         $responseTxt = $curl->set([
             'CURLOPT_HEADER'    => 0,
             'CURLOPT_SSL_VERIFYHOST'    => false,

@@ -13,9 +13,9 @@ use think\Exception;
 
 class RedisClient
 {
-    private $host = '127.0.0.1';//sever地址
+    private $host = 'r-2ze7f5a1aec35c64.redis.rds.aliyuncs.com';//sever地址
     private $port = 6379;//server端口
-    private $pass='';
+    private $pass='Xulongcai12345';
     private $redis;
     private static $handle=null;
     public $db;
@@ -24,7 +24,7 @@ class RedisClient
         try{
         $this->redis  = new \Redis;
         $this->redis->connect($this->host,$this->port);
-        //$this->redis->auth($this->pass);
+        $this->redis->auth($this->pass);
         $this->redis->select($db);
         $this->db = $db;}catch (\Exception $e){
             throw new Exception($e->getMessage(),$e->getCode());
@@ -37,7 +37,10 @@ class RedisClient
 
     }
 
-
+    public function ppush($channel,$v)
+    {
+        $this->redis->publish($channel,$v);
+    }
     public static function getHandle($db=2)
     {
         if(self::$handle===null)
@@ -70,6 +73,10 @@ class RedisClient
             throw new Exception($e->getMessage(),$e->getCode());
         }
 
+    }
+    public function keyIncr($key)
+    {
+        return $this->redis->incr($key);
     }
     public function keyExists($key)
     {
@@ -307,6 +314,11 @@ class RedisClient
     public function popList($key)
     {
         $res = $this->redis->rPop($key);
+        return $res;
+    }
+    public function listrange($key)
+    {
+        $res = $this->redis->lRange($key,0,-1);
         return $res;
     }
 }

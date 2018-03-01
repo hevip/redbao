@@ -11,6 +11,7 @@ use app\audio\service\AudioService;
 use app\common\controller\Api;
 use think\Request;
 use think\Response;
+use app\audio\service\QiniuService;
 class Audio extends Api
 {
     /*
@@ -41,6 +42,21 @@ class Audio extends Api
         }else{
             return $this->responseError(AudioService::getError());
         }
+    }
+
+
+
+    public function speechTest()
+    {
+        $data = Request::instance()->post();
+        $uid = $this->auth['user_id']??'';
+        $res = QiniuService::speechNew($data,$uid);
+        if($res){
+            return $this->responseSuccess($res);
+        }else{
+            return $this->responseError(AudioService::getError());
+        }
+
     }
 
 }

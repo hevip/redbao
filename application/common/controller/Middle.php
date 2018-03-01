@@ -14,8 +14,9 @@ use think\Hook;
  * 中间件:拦截判断是否已经授权登录
  * @package app\common\controller
  */
-class Middle extends Controller
+class  Middle extends Controller
 {
+
     public $auth;
     public function __construct()
     {
@@ -78,7 +79,9 @@ class Middle extends Controller
                     'status_code'=> 4003,
                     'message'    => 'missing param authorization in http-header'
                 ]
-            ],'json')->send();
+
+            ],'json')->send();//exit();
+
         }else{
             //验证token
             $token   = $header['authorization'];
@@ -98,7 +101,6 @@ class Middle extends Controller
                 $this->auth = AuthService::createAuth($payload);
                 SingleFactory::overAllData('auth',$this->auth);
             }
-
         }
     }
 

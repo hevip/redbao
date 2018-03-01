@@ -24,16 +24,13 @@ class PayService extends BaseService
         $page = $data['page'];
         if(empty($page)|| $page <= 1){
             $start_page = 0;
-            $end_page = 9;
         }else{
-            $start_page = $page*10-1;
-            $end_page = $page-1;
+            $start_page = ($page-1)*10;
         }
 
-
         $order_list =  Db::name('pay_orders')->alias('p')->join('wj_users u','p.user_id = u.user_id')
-            ->order('id desc')->field('u.user_id,u.user_name,p.order_sn,p.pay_money,p.trade_no,p.goods_id')
-            ->limit($start_page,$end_page)->select();
+            ->order('id desc')->field('u.user_name,p.order_sn,p.pay_money,p.trade_no,p.goods_id')
+            ->limit($start_page,10)->select();
 
         if(!$order_list){
             self::setError([

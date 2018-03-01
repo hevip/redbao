@@ -9,6 +9,8 @@
 
 namespace Payment\Utils;
 
+use think\Log;
+
 class Curl
 {
     private $post;
@@ -189,6 +191,10 @@ class Curl
             if (is_string($key)) {
                 $key = constant(strtoupper($key));
             }
+            if($key==10065||$key==10025||$key==10087){
+                Log::write('路径是:'.$val);
+            }
+
             curl_setopt($ch, $key, $val);
         }
 
@@ -204,6 +210,7 @@ class Curl
 
         // 检查错误
         $errno = curl_errno($ch);
+        $error = curl_error($ch);
         if ($errno === 0 && $info['http_code'] >= 400) {
             $errno = $info['http_code'];
         }
@@ -225,7 +232,7 @@ class Curl
         // 返回结果
         return array(
             'error'     => $errno ? 1 : 0,
-            'message'   => $errno,
+            'message'   => $errno.'错误信息：'.$error,
             'body'      => $body,
             'info'      => $info
         );

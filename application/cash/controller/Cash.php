@@ -10,7 +10,7 @@ namespace app\cash\controller;
 use think\Controller;
 use think\Request;
 use app\common\controller\Api;
-use app\pay\service\CashService;
+use app\cash\service\CashService;
 
 class Cash extends Api
 {
@@ -19,8 +19,10 @@ class Cash extends Api
     **/
     public function cash_create()
     {
+
         $uid = $this->auth['user_id'] ?? '';
         $data = Request::instance()->post();
+
         $list = CashService::cash_apply($uid,$data);
 
         if($list){
@@ -29,6 +31,5 @@ class Cash extends Api
             return $this->responseError(CashService::getError());
         }
     }
-
 
 }

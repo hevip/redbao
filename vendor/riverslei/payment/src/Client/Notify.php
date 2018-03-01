@@ -35,6 +35,7 @@ class Notify
     {
         if (is_null(self::$instance)) {
             static::$instance = new NotifyContext();
+
             try {
                 static::$instance->initNotify($type, $config);
             } catch (PayException $e) {
@@ -60,6 +61,7 @@ class Notify
         }
 
         try {
+
             $instance = self::getInstance($type, $config);
 
             $ret = $instance->notify($callback);

@@ -275,13 +275,13 @@ kJERpCvN0sKBxW6H6zitJ2xs2pap4tToiDubqpCj+l8vCL5REyfa0+WrjzPhPOjm
 WamL76Cg+/H32m3XQKHzbQJARM1gu3nHL8RcuiLj36UMO7kJMzwF23yBAldA7dot
 z63kAcF4xNmXNNkxDzPTacocahfnGB4DjkOFITUht6AG3Q==
 -----END RSA PRIVATE KEY-----',
-    'wechatapp_id'=>'wxb16d395816e1e472',
-    'wechatapp_secret'=>'1c62efb5260aa61a13c15508e6e0eea9',
-    'qiniu_accesskey'=>'moKuh5lFsIVKDD0qbb6Wv9r5JKMa3HPsIlh6mXi0',
-    'qiniu_secretKey'=>'ubZRdsRH81GxIklOr2umPy4D7dZpx7MBZuEnqVEy',
-    'qiniu_bucket'=>'weiju',//'redenvelopes',//'weiju',
-    'qiniu_notify'=>'https://weiju02.greatsir.com/qiniu/upCallback',
-    'qiniu_bucket_domain'=>'http://p3d2b4a3b.bkt.clouddn.com',
+    'wechatapp_id'=>'wx839d0f26e93bccf9',
+    'wechatapp_secret'=>'bab6759c823b7be3996c349f80f44d5e',
+    'qiniu_accesskey'=>'RzIZMgHgdxsAzCDddJ3wJYv7qb7FcdFEyx0sHdaa',
+    'qiniu_secretKey'=>'sbmuFnx4krD9yoH2bEzQ5Ol4ALuW4fVHIjxSrHkT',
+    'qiniu_bucket'=>'redenvelopes',//'weiju',
+    'qiniu_notify'=>'https://api.4s21u.cn/qiniu/upCallback',
+    'qiniu_bucket_domain'=>'http://qnbn.2962xm.cn',
     'baiduspeech_appid'=>'10813685',
     'baiduspeech_apikey'=>'FCddY0emtn2BICrQSO6vk85Z',
     'baiduspeech_secret'=>'4c4676389eddbaf62b3ee66621c5dcef'

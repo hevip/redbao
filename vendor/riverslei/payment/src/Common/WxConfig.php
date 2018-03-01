@@ -100,8 +100,8 @@ final class WxConfig extends ConfigInterface
             throw $e;
         }
 
-        $basePath = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'CacertFile' . DIRECTORY_SEPARATOR;
-        $this->cacertPath = "{$basePath}wx_cacert.pem";
+        //$basePath = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR . 'CacertFile' . DIRECTORY_SEPARATOR;
+        //$this->cacertPath = "{$basePath}wx_cacert.pem";
     }
 
     /**
@@ -169,6 +169,9 @@ final class WxConfig extends ConfigInterface
         }
         if (! empty($config['app_key_pem'])) {
             $this->appKeyPem = $config['app_key_pem'];
+        }
+        if(! empty($config['wx_cacert_pem'])){
+            $this->cacertPath = $config['wx_cacert_pem'];
         }
 
         if (key_exists('sign_type', $config) && in_array($config['sign_type'], ['MD5', 'HMAC-SHA256'])) {

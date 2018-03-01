@@ -10,11 +10,11 @@ class UserlistService extends BaseService
     /*
      * 用户列表
      */
-    public static function user($page,$user)
+    public static function user($user)
     {
-        if(empty($user)){
+        if(empty($user['user_name'])){
             $res = Db::name('users')
-                ->where('is_del', 0)->page($page, 10)->order('user_id desc')->select();
+                ->where('is_del', 0)->page($user['page'],10)->order('user_id desc')->select();
             if($res){
                 $data['total'] = Db::name('users')->where('is_del',0)->count();
                 $data['list'] = $res;
@@ -32,7 +32,7 @@ class UserlistService extends BaseService
                 $res = Db::name('users')
                     ->where('user_name','like','%'.$user['user_name'].'%')
                     ->where('is_del',0)
-                    ->page($page,10)
+                    ->page($user['page'],10)
                     ->order('user_id desc')
                     ->select();
                 if ($res) {

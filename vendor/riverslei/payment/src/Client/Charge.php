@@ -55,9 +55,9 @@ class Charge
     }
 
     /**
-     * @param string $channel   支付方式
-     * @param array $config     配置
-     * @param array $metadata   支付数据
+     * @param string $channel
+     * @param array $config
+     * @param array $metadata
      *
      * @return mixed
      * @throws PayException

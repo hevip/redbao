@@ -38,8 +38,11 @@ abstract class NotifyStrategy
      */
     final public function handle(PayNotifyInterface $notify)
     {
+
         // 获取异步通知的数据
         $notifyData = $this->getNotifyData();
+
+
         if ($notifyData === false) {// 失败，就返回错误
             return $this->replyNotify(false, '获取通知数据失败');
         }

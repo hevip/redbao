@@ -9,6 +9,7 @@ namespace app\pay\service;
 
 use app\common\model\PayOrders;
 use app\common\service\BaseService;
+use app\message\service\MessageService;
 use greatsir\RedisClient;
 use Overtrue\Pinyin\Pinyin;
 use think\Db;
@@ -19,6 +20,9 @@ use Payment\Config;
 use Payment\Client\Notify;
 use Payment\Notify\PayNotifyInterface;
 use app\common\service\TestNotify;
+use app\users\service\UserService;
+use think\Log;
+
 class PayService extends BaseService
 {
     /**
@@ -51,11 +55,12 @@ class PayService extends BaseService
 
         //文字转拼音
         $pinyin = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
-        $content_pinyin = implode(',',$pinyin->convert($data['content'],PINYIN_ASCII));
+        $content_pinyin = implode(',',$pinyin->convert($data['content']));
 
         //数据准备
         $save_data = [
             'user_id'   => $uid,
+            'type'      => $data['type'],
             'se_money'  => $data['pay_money'],
             'se_number' => $data['send_number'],
             'voice'     => $data['voice_url']??'',
@@ -72,7 +77,6 @@ class PayService extends BaseService
 
         //储存数据
         $list = $payModel::savePayOrder($save_data);
-
         if (!is_numeric($list['data'])) {
             self::setError([
                 'status_code'=> '500',
@@ -81,6 +85,23 @@ class PayService extends BaseService
             return false;
         }
 
+        //生成二维码并保存路径
+       // $born_url_model = new UserService();
+
+        $born_url = UserService::QR_code($list['data']);
+
+        if ($born_url != false) {
+            $up_url = Db::name('send')->where('red_id',$list['data'])->setField('qr_url',$born_url);
+            if (!$up_url) {
+                self::setError([
+                    'status_code'=> '500',
+                    'message'    => 'update data failure'
+                ]);
+                return false;
+            }
+        }
+
+        //生成随机红包并加入redis
         $total=$data['pay_money'];//红包总金额
         $num=$data['send_number'];// 红包个数
         $min=0.01;//每个人最少能收到0.01元
@@ -138,6 +159,17 @@ class PayService extends BaseService
 //            }
 //        }
 
+        //是否开启测试模式
+        $proprotion = Db::name('backstage')->where('id',8)->find();
+
+
+        if ($proprotion['item']) {
+            Log::write('真实模式:'.$proprotion['item']);
+            $total = $data['pay_money'];
+        }else{
+            Log::write('测试模式:'.$proprotion['item']);
+            $total = 0.01;
+        }
 
         //统一下单
         $wxConfig = config('wxpay');
@@ -146,16 +178,27 @@ class PayService extends BaseService
             'subject'    => '微聚',
             'order_no'    => $order_sn,
             'timeout_express' => time() + 600,// 表示必须 600s 内付款
-            'amount'    =>'3.01',// 微信沙箱模式，需要金额固定为3.01,$money||$data['pay_money']
+            'amount'    =>$total,// 微信沙箱模式，需要金额固定为3.01,$money||$data['pay_money']
             'return_param' => '123',
             'client_ip' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1',// 客户地址
-            'openid' => 'ottkCuO1PW1Dnh6PWFffNk-2MPbY',
+            'openid' => $openid,
             'product_id' => '123',
         ];
 
         try {
             $ret = Charge::run(Config::WX_CHANNEL_LITE, $wxConfig, $payData);
+            /*$info['red_id'] =$list['data'];
+            Log::write('package内容：'.$ret['package']);
+            parse_str($ret['package'],$prepay_id);
+            Log::write('prepay内容:'.json_encode($prepay_id));
+            $info['form_id']= $prepay_id['prepay_id'];
+            $info['openid']  = $openid;
+            Log::write('模板消息参数:'.json_encode($info));
+            $res = MessageService::template($info);*/
+            $ret['red_id'] = $list['data'];
             return $ret;
+
+
         } catch (PayException $e) {
             echo $e->errorMessage();
             exit;
@@ -164,21 +207,7 @@ class PayService extends BaseService
 
 
     }
-    /**
-     * 支付成功回调
-     */
-    public static function pay_success()
-    {
-        //回调验证
-        $wxConfig = config('wxpay');
-        $callback = new TestNotify();
-        $config = $wxConfig;
-        $type = 'wx_charge';
-        try {
-            $ret = Notify::run($type, $config, $callback);// 处理回调，内部进行了签名检查
-        } catch (PayException $e) {
-            echo $e->errorMessage();
-            exit;
-        }
-    }
+
+
+
 }
