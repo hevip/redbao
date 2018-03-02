@@ -9,6 +9,8 @@ namespace app\cash\service;
 
 use app\common\model\Cash;
 use app\common\service\BaseService;
+use app\common\service\LoadConfigService;
+use app;
 use think\Db;
 use Payment\Common\PayException;
 use Payment\Client\Transfer;
@@ -22,7 +24,6 @@ class CashService extends BaseService
      */
     public static function cash_apply($uid,$data)
     {
-
         date_default_timezone_set('Asia/Shanghai');
         //查询余额
         $user_data= Db::name('users')->where('user_id',$uid)->field('user_balance,user_openid')->find();
@@ -38,7 +39,6 @@ class CashService extends BaseService
 
         //计算剩余余额
         $new_balance = bcsub($user_data['user_balance'],$data['cash_money'],2);
-
         if ($new_balance < 0){
             self::setError([
                 'status_code'=> '500',
@@ -50,14 +50,14 @@ class CashService extends BaseService
         //提现订单号
         $cash_no = 'WJTX'.date('YmdHis').rand(1000,9999);
 
-        //获取服务费比例
+        //获取后台配置项
         $proportion = Db::name('backstage')->select();
-
         $backstack = [];
         foreach ($proportion as $k=>$v) {
             $backstack[$v['id']] = ['setitem'=> $v['setitem'],'item'=>$v['item']];
         }
 
+        //获取服务费比例
         $service =sprintf("%.2f", bcmul($data['cash_money'],$backstack[5]['item'],3));
 
         //数据准备
@@ -68,6 +68,7 @@ class CashService extends BaseService
             'pay_no'      => $cash_no,
             'create_time'  => time(),
         ];
+
         //创建订单
         $cashModel = new Cash();
         $saveCode = $cashModel->saveCashLog($uid,$save_data,$new_balance);
@@ -80,11 +81,27 @@ class CashService extends BaseService
             return false;
         }
 
+        //提现金额
         $cash_money = bcsub($data['cash_money'],$service,2);
 
+        //获取指定微信支付和提现配置
+//        $loadConfig = new LoadConfigService();
+//        if (isset($backstack[12])) {
+//            $wxConfig = config('wxpay'.$backstack[12]['item']);
+//            $pem = $loadConfig::getConfig($backstack[12]['item']);
+//            $wxConfig = array_merge($wxConfig,$pem);
+//        }elseif ($backstack[12]['item'] == 0){
+//            $wxConfig = config('wxpay');
+//            $pem = $loadConfig::getConfig(0);
+//            $wxConfig = array_merge($wxConfig,$pem);
+//        }else{
+//            $wxConfig = config('wxpay');
+//            $pem = $loadConfig::getConfig(0);
+//            $wxConfig = array_merge($wxConfig,$pem);
+//        }
+        $wxConfig = config('wxpay');
         //获取服务器ip
 	    $ip = gethostbyname($_SERVER['SERVER_NAME']);
-        $wxConfig = config('wxpay');
         if ($wxConfig['is_open']) {
             $data = [
                 'trans_no' => time(),
@@ -110,10 +127,6 @@ class CashService extends BaseService
                 'message' => 'success'
             ];
         }
-
-
-
     }
-
 
 }

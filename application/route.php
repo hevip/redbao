@@ -47,6 +47,7 @@ return [
     'address/index'=>'address/address/index',
     'message/message'=>'message/message/message',
     'userlist/index'=>'userlist/userlist/index',
+    'user/is_del'=>'userlist/userlist/is_del',
     'goods/list'=>'goods/goods/index',
 
     'detail/send'=>'mydetail/MyDetail/send',
@@ -55,6 +56,9 @@ return [
     'card/index'=>'blank/card/index',
     'red/red_list'=>'red/red/red_list',
     'message/index'=>'message/message/index',
+    'message/word'=>'message/message/word',
+    'add_word'=>'message/message/add_word',
+    'del_word'=>'message/message/del_word',
     'serviceMessage'=>'message/message/serviceMessage',
     'uploadImg'=>'message/message/uploadImg',
     'send_red_list'=>'mydetail/MyDetail/send_red_list',
@@ -231,4 +235,5 @@ return [
     'admin/getVersion/:id'=>['common/Version/getVersionNew',['method'=>'get'],['page'=>'\d+']],
     'admin/versionList'=>'admin/Version/versionList',
     'admin/setVersion'=>'admin/Version/setVersion',
+    'ad/getqr'=>'users/User/adQr'
 ];

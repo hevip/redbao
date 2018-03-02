@@ -15,11 +15,12 @@ use greatsir\RedisClient;
 use greatsir\Snowflake;
 use greatsir\wechat\WXBizDataCrypt;
 use function GuzzleHttp\Psr7\str;
+use Qiniu\Storage\UploadManager;
 use think\Cache;
 use think\Db;
 use Firebase\JWT\JWT;
 use think\Log;
-
+use Qiniu\Auth;
 class UserService extends BaseService
 {
     /*
@@ -327,22 +328,56 @@ class UserService extends BaseService
         }else{
             $limit = $page*5;
         }
+        if($page > 0){
+            return [];
+        }
         $receivedModel = new Receive();
         $data = $receivedModel->with('userInfo')->where('red_id',$red_id)->
-        order('create_time desc')->limit($limit,5)->select();
-        /*$datas[] = $data;
-        foreach ($data as $k =>$v){
-            $datas[$k]['create_time'] = date('m-d H:i',strtotime($v['create_time']));
-        }*/
-
+        order('create_time desc')->limit(30)->select();
         foreach ($data as $k =>&$v){
             $v = $v->toArray();
             $v['create_time']= date('m-d H:i',strtotime($v['create_time']));
-            //$v['create_time'] = date('m-d H:i');
         }
         return $data;
 
     }
+
+
+
+
+
+    public static function AD_QR($red_id=null){
+
+        $ac_token = self::ac_token();
+        if(!$red_id){
+            $red_id='123';
+        }
+        $url = "https://api.weixin.qq.com/wxa/getwxacode?access_token=".$ac_token;//接口地址
+        $data = [
+            'path'=>'pages/recive/recive?red_id='.$red_id,
+            //'page' =>'pages/recive/recive',
+            'width'=>'50',
+
+        ];
+
+        $data = json_encode($data);
+        $result = self::https_request($url,$data);//与接口建立会话
+        Log::write('生成的二维码结果：'.json_encode($result));
+        if($result){
+            $qr=self::add_qrimg($result,$red_id);
+            return $qr;
+        }else{
+            return false;
+        }
+    }
+
+
+
+
+
+
+
+
 
 
 
@@ -360,15 +395,12 @@ class UserService extends BaseService
             'width'=>'50',
 
         ];
-        /*$data = [
-            'scene'=>'1231',
 
-        ];*/
         $data = json_encode($data);
         $result = self::https_request($url,$data);//与接口建立会话
         Log::write('生成的二维码结果：'.json_encode($result));
         if($result){
-            $qr=self::add_qrimg($result);
+            $qr=self::add_qrimg($result,$red_id);
             return $qr;
         }else{
             return false;
@@ -377,16 +409,40 @@ class UserService extends BaseService
     }
 
     //二进制转换为图片
-    public static function add_qrimg($result){
-        $imgDir = 'uploads'.DS.'QR'.DS;
+    public static function add_qrimg($result,$red_id){
+
+        $accessKey=config('qiniu_accesskey');
+        $secretKey=config('qiniu_secretKey');
+        $bucket   = config('qiniu_bucket');
+        $qiniu = new Auth($accessKey,$secretKey);
+        $noticeUrl=config('qiniu_notify');
+        //上传策略
+        $audioFormat='avthumb/wav/ab/16k';
+        $policy = array(
+            'persistentOps' => $audioFormat,
+            'persistentPipeline' => "audio-pipe",
+            'persistentNotifyUrl' => $noticeUrl,
+        );
+        $upToken = $qiniu->uploadToken($bucket);
+        $upload = new UploadManager();
+        $key = time().$red_id;
+        $re =  $upload->put($upToken,$key,$result);
+
+        $filePath = config('qiniu_bucket_domain').DS.$re[0]['key'];
+        //var_dump($re);die;
+        return $filePath;
+
+
+        /////////////////////////////////////////////////
+        /*$imgDir = 'uploads'.DS.'QR'.DS;
         $filename="qr_red_".time().".jpg";//要生成的图片名字
         $jpg = $result;//得到二进制原始数据
         $file = fopen($imgDir.$filename,"w");//打开文件准备写入
         fwrite($file,$jpg);//写入
         fclose($file);//关闭
         $filePath = 'https://'.$_SERVER['HTTP_HOST'].DS.$imgDir.$filename;
-        return $filePath;
-
+        return $filePath;*/
+        ////////////////////////////
 
     }
 
@@ -478,7 +534,7 @@ class UserService extends BaseService
                 }else{
                     $content =$v['red_info']['content'];
                 }
-                $item['voice_url']=$v['voice_url'];
+                $item['voice_url']='http://'.$v['voice_url'];
                 $item['red_id']   = $v['red_id'];
                 $item['create_time']= $v['create_time'];
                 $item['content']    = $content;
@@ -566,5 +622,91 @@ class UserService extends BaseService
         }
         $red['type'] = $type;
         return $red;
+    }
+
+
+
+    //后台查看红包二维码
+    public static function adQr_list($page){
+        if(empty($page) || $page < 1){
+            $limit = 0;
+        }else{
+            $limit = ($page-1) * 10;
+        }
+        $data = Db::name('red_qr')->where(['is_del'=>0])->limit($limit,10)->select();
+        if($data){
+            return $data;
+        }else{
+            self::setError([
+                'status_code' => 500,
+                'message' =>'没有数据',
+            ]);
+            return false;
+        }
+    }
+
+
+    //后台添加 红包修改二维码
+    public static function adQr_set($data){
+        //$data = json_decode($data,true);
+        $red = Db::name('send')->where('red_id',$data['red_id'])->find();
+        if(empty($red)){$msg = '请输入正确的红包ID';}
+        $alone = Db::name('red_qr')->where(['red_id'=>$data['red_id'],'is_del'=>0])->find();
+        if(!empty($alone)){$msg = '存在相同红包ID';}
+        if(empty($data['qr_address'])){$msg = '请输入二维码地址';}
+        $data['create_time'] = time();
+        if(isset($msg)){
+            self::setError([
+                'status_code' => 4055,
+                'message' =>$msg,
+            ]);
+            return false;
+        }
+        if(empty($data['id'])){
+             unset($data['id']);
+
+             $res =  Db::name('red_qr')->insert($data);
+        }else{
+
+             $res = Db::name('red_qr')->where(['id'=>$data['id'],'is_del'=>0])->update($data);
+        }
+        if($res){
+            return true;
+        }else{
+            self::setError([
+                'status_code' => 500,
+                'message' =>'服务器忙',
+            ]);
+            return false;
+        }
+    }
+
+
+
+    public static function adQr_del($id){
+        $map=[
+            'id'=>$id,
+            'is_del'=>0
+        ];
+        $res = Db::name('red_qr')->where($map)->find();
+        if(empty($res)){
+            self::setError([
+                'status_code' => 4055,
+                'message' =>'请输入正确的ID',
+            ]);
+            return false;
+        }
+        $del = Db::name('red_qr')->where($map)->setInc('is_del');
+
+        if($del){
+            return true;
+        }else{
+            self::setError([
+                'status_code' => 500,
+                'message' =>'请输入正确的ID',
+            ]);
+            return false;
+        }
+
     }
 }

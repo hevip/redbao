@@ -18,7 +18,7 @@ class Version extends Api
     /*
      * 设置版本号
      */
-    public function setVersion($id=null,$name=null,$appid=null,$app_version=null)
+    public function setVersion($id=null,$name=null,$appid=null,$app_version)
     {
         /*$data = Request::instance()->post();*/
         /*$admin_id = $this->auth['admin_id']??'';

@@ -138,6 +138,12 @@ class AudioService extends BaseService
             ]);
             return false;
         }
+        if($redInfo['is_over']==1){
+            return [
+                'result'=>false,
+                'message'=>'红包已经过期了'
+            ];
+        }
         $content2 = $redInfo['content_pinyin'];
         $res = self::judge($speech['content'],$content2);
         if($res&&!empty($speech['content'])&&!empty($content2)) {
@@ -145,12 +151,37 @@ class AudioService extends BaseService
 
             //$money =1.2;//从redis里面取出来
             $redis = RedisClient::getHandle(0);
-           /* $ids_str = $redis->getKey('ad_red_ids');
-            if($ids_str){
-                $ids = explode(',',$ids_str);
-                if(in_array($data['red_id'],$ids)){
+
+
+            //广告红包领取
+            if($redis->in_set('adv_reds',$data['red_id'])){
+
+                $type = Db::name('backstage')->where(['id'=>15])->value('item');
+
+                if($type==1){
+                    //根据时间间隔,
+                    $setTime = Db::name('backstage')->where(['id'=>14])->value('item');
+                    $time = $redis->getKey('ad_redPackage_time:'.$data['red_id']);
+                    if(!$time){
+                        $time = $redInfo['create_time'];
+                    }
+                    //判断时间戳和time是否大御settime
+                    $a = time()-$time;
+                    if($a<($setTime*60)){
+                        return [
+                            'result'=>false,
+                            'money'=>isset($money)?$money:'',
+                            'user_icon'=>$userInfo['user_icon'],
+                            'user_name'=>$userInfo['user_name'],
+                            'time'=>date('m-d h:i'),
+                            'voice_url'=>$speech['voice_url']
+                        ];
+                    }
+                    $redis->setKey('ad_redPackage_time:'.$data['red_id'],time());
+                }else{
+                    $personNum = Db::name('backstage')->where(['id'=>16])->value('item');
                     $key = $redis->keyIncr('ad_red_package:'.$data['red_id']);
-                    if($key%100!=0){
+                    if($key%$personNum!=0){
                         //返回
                         return [
                             'result'=>false,
@@ -161,20 +192,6 @@ class AudioService extends BaseService
                             'voice_url'=>$speech['voice_url']
                         ];
                     }
-                }
-            }*/
-            if($redis->in_set('adv_reds',$data['red_id'])){
-                $key = $redis->keyIncr('ad_red_package:'.$data['red_id']);
-                if($key%100!=0){
-                    //返回
-                    return [
-                        'result'=>false,
-                        'money'=>isset($money)?$money:'',
-                        'user_icon'=>$userInfo['user_icon'],
-                        'user_name'=>$userInfo['user_name'],
-                        'time'=>date('m-d h:i'),
-                        'voice_url'=>$speech['voice_url']
-                    ];
                 }
             }
 
@@ -246,6 +263,9 @@ class AudioService extends BaseService
        //判断两者相似度
        $a = explode(',',$content_a);
        $b = explode(',',$content_b);
+       if(count($a)!=count($b)){
+           return false;
+       }
        Log::write('输入的数组：'.$content_a);
        Log::write('红包的数组：'.$content_b);
        $rate = Db::name('backstage')->where(['id'=>10])->value('item');

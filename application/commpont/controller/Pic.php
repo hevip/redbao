@@ -22,7 +22,7 @@ class Pic extends \think\Controller
             return Response::create([
                 'status'=>'success',
                 'data'  =>[
-                    'img_url' =>Request::instance()->domain().'/uploads/'.$result
+                    'img_url' =>$result
                 ],
             ],'json');
 

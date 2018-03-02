@@ -25,9 +25,8 @@ class VersionService extends BaseService
             'app_version'=>$app_version,
         ];
         $msg=null;
-        if(empty($data['appid'])){$msg='请输入版本名称';}
+        if(empty($data['name'])){$msg='请输入版本名称';}
         if(empty($data['appid'])){$msg='请输入appid';}
-        if(empty($data['app_version'])){$msg='请输入版本号';}
         if(!empty($msg)){
             self::setError([
                 'status_code'=>4055,
@@ -73,7 +72,7 @@ class VersionService extends BaseService
             'id'=>$id
         ];
         $version = Db::name('app_version')->where($map)->value('app_version');
-        if(!$version){
+        if($version!=0&&empty($version)){
             self::setError([
                 'status_code'=>4055,
                 'message'    =>'无此ID的版本号',

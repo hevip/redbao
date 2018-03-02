@@ -24,4 +24,15 @@ class Userlist extends Api
             return $this->responseError(UserlistService::getError());
         }
     }
+
+    public function is_del()
+    {
+        $user = Request::instance()->post();
+        $res = UserlistService::is_del($user);
+        if($res){
+            return $this->responseSuccess($res);
+        }else{
+            return $this->responseError(UserlistService::getError());
+        }
+    }
 }

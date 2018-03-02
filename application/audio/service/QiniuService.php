@@ -139,22 +139,21 @@ class QiniuService extends BaseService
         //echo $command1;
         //echo getcwd();
         //Log::write('命令是：'.$command);
-        try{
-            //exec($command);
-            exec( escapeshellcmd($command1), $output, $return_val);
-            Log::write('命令执行结果是：'.json_encode($output));
-            Log::write('命令行执行结果返回值：'.json_encode($return_val));
-            //Log::write('命令执行结果是：'.$output);
-        }catch (\Exception $e){
-            throw new \think\Exception($e->getMessage(),$e->getCode());
+        exec( escapeshellcmd($command1), $output, $return_val);
+        Log::write('命令执行结果是：'.json_encode($output));
+        Log::write('命令行执行结果返回值：'.json_encode($return_val));
+        if($return_val){
+            $speech_res = false;
+        }else{
+            if(!file_exists($wav)){
+                Log::write('没有生成文件');
+            }
+            $speech_res = AudioService::speech([
+                'audioUrl'=> $wav
+            ]);
         }
 
-        if(!file_exists($wav)){
-            Log::write('没有生成文件');
-        }
-        $speech_res = AudioService::speech([
-            'audioUrl'=> $wav
-        ]);
+
         //删除文件
         unlink($wav);
         Log::write('识别结果:'.json_encode($speech_res,JSON_UNESCAPED_UNICODE));

@@ -29,7 +29,7 @@ class Version extends Controller
     }
     public function getVersionNew($id){
         $result = VersionService::getVersion($id);
-        if($result){
+        if($result==0||$result){
             return Response::create([
                 'status'=>'success',
                 'data'  => [

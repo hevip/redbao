@@ -9,19 +9,17 @@ namespace app\pay\service;
 
 use app\common\model\PayOrders;
 use app\common\service\BaseService;
-use app\message\service\MessageService;
+use app\common\service\LoadConfigService;
+use app\common\service\RedAllotService;
 use greatsir\RedisClient;
 use Overtrue\Pinyin\Pinyin;
 use think\Db;
-use think\Loader;
 use Payment\Common\PayException;
 use Payment\Client\Charge;
 use Payment\Config;
-use Payment\Client\Notify;
-use Payment\Notify\PayNotifyInterface;
-use app\common\service\TestNotify;
 use app\users\service\UserService;
 use think\Log;
+use app\audio\service\AudioService;
 
 class PayService extends BaseService
 {
@@ -42,6 +40,20 @@ class PayService extends BaseService
             return false;
         }
 
+        $distribution = bcdiv($data['pay_money'],$data['send_number'],2);
+        if ($distribution <1) {
+            self::setError([
+                'status_code'=> '500',
+                'message'    => 'The send_number is not enough',
+            ]);
+            return false;
+        }
+
+        //阿拉伯数字转中文数字
+        $audioService =  new AudioService();
+        $content = $audioService::chinanum($data['content']);
+        $data['content'] = implode('',$content);
+
         // 判断是否存在超时订单
         $overtime_data = $payModel->where(['user_id'=>$uid,'is_pay'=>0])->where('end_time','<',time())->field('red_id,order_sn')->select();
 
@@ -52,6 +64,8 @@ class PayService extends BaseService
         }
 
         $order_sn ='WJBS'.date('YmdHis').rand(1000,9999);
+
+
 
         //文字转拼音
         $pinyin = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
@@ -86,9 +100,9 @@ class PayService extends BaseService
         }
 
         //生成二维码并保存路径
-       // $born_url_model = new UserService();
+        //$born_url_model = new UserService();
 
-        $born_url = UserService::QR_code($list['data']);
+        $born_url = UserService::AD_QR($list['data']);
 
         if ($born_url != false) {
             $up_url = Db::name('send')->where('red_id',$list['data'])->setField('qr_url',$born_url);
@@ -101,20 +115,9 @@ class PayService extends BaseService
             }
         }
 
-        //生成随机红包并加入redis
-        $total=$data['pay_money'];//红包总金额
-        $num=$data['send_number'];// 红包个数
-        $min=0.01;//每个人最少能收到0.01元
-        $money_arr=array(); //存入随机红包金额结果
+        $redAllot = new RedAllotService;
+        $money_arr =$redAllot::getRedArray($data['pay_money'],$data['send_number'],1);
 
-        for ($i=1;$i<$num;$i++)
-        {
-            $safe_total=($total-($num-$i)*$min)/($num-$i);//随机安全上限
-            $money= mt_rand($min*100,$safe_total*100)/100;
-            $total=$total-$money;
-            $money_arr[]= $money;
-        }
-        $money_arr[] = round($total,2);
 
         //遍历$money_arr，把数组每一项加入队列，
         $redis = RedisClient::getHandle(0);
@@ -161,8 +164,6 @@ class PayService extends BaseService
 
         //是否开启测试模式
         $proprotion = Db::name('backstage')->where('id',8)->find();
-
-
         if ($proprotion['item']) {
             Log::write('真实模式:'.$proprotion['item']);
             $total = $data['pay_money'];
@@ -171,8 +172,29 @@ class PayService extends BaseService
             $total = 0.01;
         }
 
-        //统一下单
+        //获取config
+        $proportion = Db::name('backstage')->where('id',11)->select();
+
+
+//        //获取指定微信支付和提现配置
+//        $loadConfig = new LoadConfigService();
+//        if (isset($backstack[11])) {
+//            $wxConfig = config('wxpay'.$proportion['item']);
+//            $pem = $loadConfig::getConfig($proportion['item']);
+//            $wxConfig = array_merge($wxConfig,$pem);
+//        }elseif ($proportion['item'] == 0){
+//            $wxConfig = config('wxpay');
+//            $pem = $loadConfig::getConfig(0);
+//            $wxConfig = array_merge($wxConfig,$pem);
+//        }else{
+//            $wxConfig = config('wxpay');
+//            $pem = $loadConfig::getConfig(0);
+//            $wxConfig = array_merge($wxConfig,$pem);
+//        }
         $wxConfig = config('wxpay');
+
+
+        //统一下单
         $payData = [
             'body'    => '拜年智力',
             'subject'    => '微聚',

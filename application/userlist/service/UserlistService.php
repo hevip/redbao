@@ -49,4 +49,27 @@ class UserlistService extends BaseService
             }
         }
     }
+
+    public static function is_del($user)
+    {
+        if(!is_numeric($user['user_id'])){
+            self::setError(['status_code' => 4001, 'message' => 'user_id参数不合法']);
+            return false;
+        }
+        if($user['is_del'] != 0 && $user['is_del'] != 1){
+            self::setError(['status_code' => 4001, 'message' => 'is_del参数不合法']);
+            return false;
+        }
+        $res = Db::name('users')->where('user_id',$user['user_id'])->setField('is_del',$user['is_del']);
+        if($res){
+            if($user['is_del'] == 1){
+                return ['msg'=>'该用户已被禁用'];
+            }else{
+                return ['msg'=>'该用户已开启'];
+            }
+        }else{
+            self::setError(['status_code' => 500, 'message' => '服务器忙，请稍候在试']);
+            return false;
+        }
+    }
 }

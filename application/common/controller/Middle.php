@@ -20,6 +20,7 @@ class  Middle extends Controller
     public $auth;
     public function __construct()
     {
+
        $request = Request::instance();
        $header  = $request->header();
        if(!isset($header['identity']))

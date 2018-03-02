@@ -1,2 +1,3 @@
 application/database.php
 runtime/*
+application/common/controller/Index.php

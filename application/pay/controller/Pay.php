@@ -28,6 +28,4 @@ class Pay extends Api
             return $this->responseError(PayService::getError());
         }
     }
-
-
 }

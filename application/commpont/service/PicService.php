@@ -1,5 +1,7 @@
 <?php 
 namespace app\commpont\service;
+use Qiniu\Auth;
+use Qiniu\Storage\UploadManager;
 use think\Request;
 use think\Response;
 class PicService extends \app\common\service\BaseService 
@@ -79,34 +81,30 @@ class PicService extends \app\common\service\BaseService
 	{
 		// 获取表单上传文件 例如上传了001.jpg
         $file = Request::instance()->file('upload');//name="image"
+
+        $accessKey = config('qiniu_accessKey');
+        $secretKey = config('qiniu_secretKey');
+        $bucket = config('qiniu_bucket');
+        $qiniu = new Auth($accessKey,$secretKey);
+        $noticeUrl = config('qiniu_notify');
+        $upToken = $qiniu->uploadToken($bucket);
+        $upload = new UploadManager();
+        $key = 'ad'.time();
+        $res = $upload->put($upToken,$key,$file);
+        $filePath = config('qiniu_bucket_domain').DS.$res[0]['key'];
+        //var_dump($re);die;
+        return $filePath;
         // 移动到框架应用根目录/public/uploads/ 目录下
-        $info = $file->validate(['size'=>1000000,'ext'=>'jpg,jpeg,png,gif'])->move(self::$uploadPath);
+        /*$info = $file->validate(['size'=>1000000,'ext'=>'jpg,jpeg,png,gif'])->move(self::$uploadPath);
         if($info){
-            // 成功上传后 获取上传信息
-            // 输出 jpg
-            // echo $info->getExtension();
-            // 输出 20160820/42a79759f284b767dfcb2a0197904287.jpg
-            // echo '/uploads/'.$info->getSaveName();die;
-            // echo PicService::$uploadPath.'\\'.$info->getFilename();die;
             self::imageResize($info->getFilename(),self::$uploadPath . DS . date('Ymd'),'400','400','s_');
             self::imageResize($info->getFilename(),self::$uploadPath . DS . date('Ymd'),'800','800','m_');
             self::imageResize($info->getFilename(),self::$uploadPath . DS . date('Ymd'),'1000','1000','b_');
-            // 输出 42a79759f284b767dfcb2a0197904287.jpg
             return $info->getSaveName();
-            /*return $this->responceData(true,[
-                		'code' => 200,
-                		'message' => $info->getFilename(),
-                	]);*/
         }else{
-        	// var_dump($file->getError());die;
             self::setError([$file->getError()]);
             return false;
-            // 上传失败获取错误信息
-            /*return $this->responceData(false,[
-            		'code' => 4008,
-            		'message' => $file->getError(),
-            	]);*/
-        }
+        }*/
 	}
 
 	public function uploadPics()

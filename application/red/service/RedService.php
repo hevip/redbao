@@ -158,6 +158,12 @@ class RedService extends BaseService
             ]);
             return false;
         }
+        if($redInfo['is_over']==1){
+            return [
+                'result'=>false,
+                'message'=>'红包已经过期'
+            ];
+        }
         //$money =1.2;//从redis里面取出来
         $redis = RedisClient::getHandle(0);
         $money = $redis->popList('red_money:'.$data['red_id']);

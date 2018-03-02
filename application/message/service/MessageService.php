@@ -46,7 +46,8 @@ class MessageService extends BaseService
     //微信上传临时素材
     public static function Img()
     {
-        $img = "C:\\Users\\Administrator\\Desktop\\1.jpg";
+        $img = "C:\\Users\\Administrator\\Desktop\\2.jpg";
+//        var_dump($img['tmp_name']);exit;
         $ACCESS_TOKEN = UserService::ac_token();
         $upload = 'https://api.weixin.qq.com/cgi-bin/media/upload?access_token='.$ACCESS_TOKEN.'&type=image';
 //        $image = array('media'=>'@'.$img);
@@ -75,9 +76,9 @@ class MessageService extends BaseService
 //            'touser' => 'o9ZC35bbKoGTWZLt2xGzm5NPbp6E',
             'msgtype' => 'miniprogrampage',
             'miniprogrampage' => [
-                'title' => '发现新红包点此进入',
+                'title' => $info['title'],
                 'pagepath'=>'/pages/recive/recive?red_id='.$info['red_id'],
-                'thumb_media_id'=>'kzBuLQ0rY8RGKNVi_Ioy4k6ZZtjJyOqKjiO_Vp9yy1Qo_WNVcTQzn1Z2d48jaDHE'
+                'thumb_media_id'=>'KE1pMOikROGzYYcj9pKYXYLA7mg2Taw96L06j-YTLTymKB_7ECO_0-N3c6TTyaYt'
             ]
             );
 //发送文本
@@ -114,7 +115,7 @@ class MessageService extends BaseService
                 'touser' => $openid,
                 'template_id' => "SSxUVgOKZW85YydzlwTT4h7wsS_Lwydgv-u5ESMS_Ng",
                 'form_id'=>$info['form_id'],
-                'page'=>'/pages/recive/recive?red_id='.$info['red_id'],
+                'page'=>'pages/recive/recive?red_id='.$info['red_id'],
                 'data'=>[
                     'keyword1'=>['value'=>$res['content'],'color'=>'#5C81FF'],
                     'keyword2'=>['value'=>date('m-d H:i'),'color'=>'#5C81FF'],
@@ -126,7 +127,7 @@ class MessageService extends BaseService
                 'touser' =>$openid,
                 'template_id' => "YHa9WVQfj_0TkNCVDCartMQ50lGA0IjT4K-GJ56IAwE",
                 'form_id'=>$info['form_id'],
-                'page'=>'/pages/recive/recive?red_id='.$info['red_id'],
+                'page'=>'pages/recive/recive?red_id='.$info['red_id'],
                 'data'=>[
                     'keyword1'=>['value'=>'真心寄语','color'=>'#5C81FF'],
                     'keyword2'=>['value'=>date('m-d H:i'),'color'=>'#5C81FF'],
@@ -172,4 +173,82 @@ class MessageService extends BaseService
         return $output;
     }
 
+
+    public static function word()
+    {
+        $res = Db::name('words')->where('pid',0)->select();
+//        var_dump($res);exit;
+        foreach($res as $k=>$v){
+            $res[$k]['content'] = Db::name('words')->where('pid',$v['id'])->select();
+        }
+//        var_dump($res);exit;
+        if($res){
+            return $res;
+        }elseif(empty($res))
+        {
+            return ['msg'=>'暂无数据'];
+        }else{
+            self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+            return false;
+        }
+    }
+
+    //添加口令
+    public static function postWord($info)
+    {
+        $validate = validate('app\message\validate\Word');
+        if(!$validate->check($info)){
+            self::setError([
+                'status_code'=>4105,
+                'message'    =>$validate->getError()
+            ]);
+            return false;
+        }
+        $res = Db::name('words')->where('title',$info['title'])->value('id');
+        if($res){
+            $content = ['title'=>$info['content'],'pid'=>$res,'create_time'=>time()];
+            $res = Db::name('words')->insert($content);
+            if($res){
+                return ['msg'=>'添加成功'];
+            }else{
+                self::setError(['status_code' => 500, 'message' => '添加失败']);
+                return false;
+            }
+        }else{
+            $title = ['title'=>$info['title'],'pid'=>0,'create_time'=>time()];
+            $id = Db::name('words')->insertGetId($title);
+            $content = ['title'=>$info['content'],'pid'=>$id,'create_time'=>time()];
+            $res = Db::name('words')->insert($content);
+            if($res){
+                return ['msg'=>'添加成功'];
+            }else{
+                self::setError(['status_code' => 500, 'message' => '添加失败']);
+                return false;
+            }
+        }
+
+    }
+
+    //删除口令
+    public static function del_word($info)
+    {
+        if(!is_numeric($info['id'])){
+            self::setError(['status_code' => 500, 'message' => 'id参数非法']);
+            return false;
+        }
+        $id = Db::name('words')->where('pid',$info['id'])->find();
+        if($id){
+            self::setError(['status_code' => 500, 'message' => '请先删除下面的子类！']);
+            return false;
+        }else{
+            $res = Db::name('words')->where('id',$info['id'])->delete();
+            if($res){
+                return ['msg'=>'删除成功'];
+            }else{
+                self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+                return false;
+            }
+        }
+
+    }
 }

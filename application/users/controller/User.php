@@ -96,9 +96,19 @@ class User extends Api
     }
 
     public function QR_code(){
-        $data = UserService::QR_code();
+        $data = UserService::AD_QR();  //原QR_code
         if($data){
             return $this->responseSuccess($data);
+        }else{
+            return $this->responseError(UserService::getError());
+        }
+    }
+    public function adQr()
+    {
+        $data = Request::instance()->post();
+        $res  = UserService::AD_QR($data['red_id']);
+        if($res){
+            return $this->responseSuccess($res);
         }else{
             return $this->responseError(UserService::getError());
         }
@@ -139,6 +149,34 @@ class User extends Api
     }
 
 
+    //二维码后台查看
+    public function adQr_list($page){
+        $result = UserService::adQr_list($page);
+        if($result){
+            return $this->responseSuccess($result);
+        }else{
+            return $this->responseError(UserService::getError());
+        }
+    }
+
+    //二维码后台增加，修改
+    public function adQr_set($data){
+        $result = UserService::adQr_set($data);
+        if($result){
+            return $this->responseSuccess($result);
+        }else{
+            return $this->responseError(UserService::getError());
+        }
+    }
 
 
+    //二维码后台删除
+    public function adQr_del($id){
+        $result = UserService::adQr_del($id);
+        if($result){
+            return $this->responseSuccess($result);
+        }else{
+            return $this->responseError(UserService::getError());
+        }
+    }
 }
