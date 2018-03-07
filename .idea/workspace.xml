@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="529c1bd4-d40f-4f4b-ba46-f5a5c51e7f6b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/application/audio/service/AudioService.php" afterPath="$PROJECT_DIR$/application/audio/service/AudioService.php" />
-    </list>
+    <list default="true" id="529c1bd4-d40f-4f4b-ba46-f5a5c51e7f6b" name="Default" comment="" />
     <ignored path="$PROJECT_DIR$/vendor/overtrue/pinyin/" />
     <ignored path="$PROJECT_DIR$/vendor/qiniu/php-sdk/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -16,6 +13,16 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="RedService.php" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/application/red/service/RedService.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="537">
+              <caret line="32" column="45" lean-forward="false" selection-start-line="32" selection-start-column="37" selection-end-line="32" selection-end-column="45" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="QiniuService.php" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/application/commpont/service/QiniuService.php">
           <provider selected="true" editor-type-id="text-editor">
@@ -39,8 +46,18 @@
       <file leaf-file-name="AudioService.php" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/application/audio/service/AudioService.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="669">
+            <state relative-caret-position="671">
               <caret line="179" column="81" lean-forward="false" selection-start-line="179" selection-start-column="81" selection-end-line="179" selection-end-column="81" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Red.php" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/application/red/controller/Red.php">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="603">
+              <caret line="97" column="31" lean-forward="false" selection-start-line="97" selection-start-column="31" selection-end-line="97" selection-end-column="31" />
               <folding />
             </state>
           </provider>
@@ -220,12 +237,12 @@
       <option name="presentableId" value="Default" />
       <updated>1518071893238</updated>
       <workItem from="1519969803542" duration="2564000" />
-      <workItem from="1519981251894" duration="1038000" />
+      <workItem from="1519981251894" duration="1331000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="3602000" />
+    <option name="totallyTimeSpent" value="3895000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-1920" y="0" width="1920" height="1080" extended-state="0" />
@@ -353,9 +370,25 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/application/red/controller/Red.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="603">
+          <caret line="97" column="31" lean-forward="false" selection-start-line="97" selection-start-column="31" selection-end-line="97" selection-end-column="31" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/application/red/service/RedService.php">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="537">
+          <caret line="32" column="45" lean-forward="false" selection-start-line="32" selection-start-column="37" selection-end-line="32" selection-end-column="45" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/application/audio/service/AudioService.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="669">
+        <state relative-caret-position="671">
           <caret line="179" column="81" lean-forward="false" selection-start-line="179" selection-start-column="81" selection-end-line="179" selection-end-column="81" />
           <folding />
         </state>

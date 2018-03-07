@@ -12,7 +12,8 @@ use think\Validate;
 class MyDetail extends Validate
 {
     protected $rule = [
-        'page' =>'require|number'
+        'page' =>'require|number',
+        'user_name'=>'chsAlphaNum'
     ];
 
 }

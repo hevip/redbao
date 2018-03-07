@@ -328,12 +328,10 @@ class UserService extends BaseService
         }else{
             $limit = $page*5;
         }
-        if($page > 0){
-            return [];
-        }
+
         $receivedModel = new Receive();
         $data = $receivedModel->with('userInfo')->where('red_id',$red_id)->
-        order('create_time desc')->limit(30)->select();
+        order('create_time desc')->limit($limit,5)->select();
         foreach ($data as $k =>&$v){
             $v = $v->toArray();
             $v['create_time']= date('m-d H:i',strtotime($v['create_time']));
@@ -391,7 +389,7 @@ class UserService extends BaseService
         $url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit?access_token=".$ac_token;//接口地址
         $data = [
             'scene'=>$red_id,
-            //'page' =>'pages/recive/recive',
+            'page' =>'pages/recive/recive',
             'width'=>'50',
 
         ];
@@ -523,7 +521,7 @@ class UserService extends BaseService
         $model = new Receive();
         $where['user_id'] = $uid;
         $where['voice_url']=array('neq','');
-        $res   = $model->with('redInfo')->where($where)->field('red_id,voice_url,create_time')->order('id desc')->limit(6)->select();
+        $res   = $model->with('redInfo')->where($where)->field('red_id,voice_url,voice_length,create_time')->order('id desc')->limit(6)->select();
         //return $res;
         //dump($res);die;
         $data = [];
@@ -534,6 +532,7 @@ class UserService extends BaseService
                 }else{
                     $content =$v['red_info']['content'];
                 }
+                $item['voice_length'] = $v['voice_length'];
                 $item['voice_url']='http://'.$v['voice_url'];
                 $item['red_id']   = $v['red_id'];
                 $item['create_time']= $v['create_time'];
@@ -544,8 +543,7 @@ class UserService extends BaseService
 
         return $data;
     }
-
-
+    
 
     //举报
     public static function report($content,$phone,$weixin,$red_id,$uid){
@@ -708,5 +706,80 @@ class UserService extends BaseService
             return false;
         }
 
+    }
+
+    //增加分享次数
+    public static function addShareTimes($uid,$data)
+    {
+        //判断是否为广告红包
+        $is_ad = Db::name('advertisement')->where('red_id',$data['red_id'])->field('id')->find();
+        if (empty($is_ad)) {
+            return [
+                'status_code' => 1,
+                'message' => '此次分享不增加次数！'
+            ];
+        }
+
+        //获取openid
+        $openid = Db::name('users')->where('user_id',$uid)->field('user_openid')->find();
+
+        //获取今日0点时间戳
+        $today_start = strtotime(date("Y-m-d"),time());
+
+        //解密groupid
+        $appid = config('wechatapp_id');
+        $redis = RedisClient::getHandle();
+        $session_key = $redis->getKey('openid:'.$openid['user_openid']);
+
+        $pc = new WXBizDataCrypt($appid,$session_key);
+        $errcode = $pc->decryptData($data['encryptedData'],$data['iv'],$newData);
+
+        if($errcode==0){
+            //解密成功
+            $newData = json_decode($newData);
+            $groupId = $newData->openGId;
+
+        }else{
+            self::setError([
+                'status_code'=>$errcode,
+                'message'    =>'数据校验失败'
+            ]);
+            return false;
+        }
+
+        //查询当前时间和群号是否存在
+        $share_data = Db::name('share_log')->where('user_id',$uid)->where('group_id',$groupId)->where('create_time','gt',$today_start)->field('id')->find();
+
+        if (empty($share_data)) {
+            $save_data = [
+                'user_id' => $uid,
+                'group_id' => $groupId,
+                'create_time' => time(),
+            ];
+            Db::startTrans();
+            try{
+                Db::name('share_log')->insert($save_data);
+                Db::name('users')->where('user_id',$uid)->setInc('share_times');
+                // 提交事务
+                Db::commit();
+                return [
+                    'status_code' => 1,
+                    'message' =>'分享成功！',
+                ];
+
+            } catch (\Exception $e) {
+                // 回滚事务
+                Db::rollback();
+                return [
+                    'status_code' => 500,
+                    'message' =>'网络超时！',
+                ];
+            }
+        }else{
+            return [
+                'status_code' => 1,
+                'message' =>'分享成功！',
+            ];
+        }
     }
 }

@@ -275,8 +275,8 @@ kJERpCvN0sKBxW6H6zitJ2xs2pap4tToiDubqpCj+l8vCL5REyfa0+WrjzPhPOjm
 WamL76Cg+/H32m3XQKHzbQJARM1gu3nHL8RcuiLj36UMO7kJMzwF23yBAldA7dot
 z63kAcF4xNmXNNkxDzPTacocahfnGB4DjkOFITUht6AG3Q==
 -----END RSA PRIVATE KEY-----',
-    'wechatapp_id'=>'wx839d0f26e93bccf9',
-    'wechatapp_secret'=>'bab6759c823b7be3996c349f80f44d5e',
+    'wechatapp_id'=>'wxf1a1b8b557b1ea45',//'wx839d0f26e93bccf9',//wx839d0f26e93bccf9
+    'wechatapp_secret'=>'1c7e4749aebab0394ec1a82b96db84a9',//'bab6759c823b7be3996c349f80f44d5e',
     'qiniu_accesskey'=>'RzIZMgHgdxsAzCDddJ3wJYv7qb7FcdFEyx0sHdaa',
     'qiniu_secretKey'=>'sbmuFnx4krD9yoH2bEzQ5Ol4ALuW4fVHIjxSrHkT',
     'qiniu_bucket'=>'redenvelopes',//'weiju',

@@ -15,11 +15,11 @@ class PayBack extends Controller{
      **/
     public function pay_success()
     {
-
         Log::write('回调收到请求,时间是：'.date('Y-m-d H:i:s'));
         //回调验证
         $wxConfig = config('wxpay');
         $callback = new TestNotify();
+
         $config = $wxConfig;
         $type = 'wx_charge';
         try {
@@ -30,12 +30,10 @@ class PayBack extends Controller{
             echo $e->errorMessage();
             exit;
         }
-
     }
 
     public function outTimeBack()
     {
-
         $list = payBackService::outTimeBack();
     }
 }

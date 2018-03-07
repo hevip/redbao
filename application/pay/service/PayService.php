@@ -5,6 +5,7 @@
  * Date: 2018/1/26
  * Time: 下午4:22
  */
+
 namespace app\pay\service;
 
 use app\common\model\PayOrders;
@@ -26,154 +27,131 @@ class PayService extends BaseService
     /**
      * 微信支付创建
      */
-    public static function pay_creat($uid,$data)
+    public static function pay_creat($uid, $data)
     {
         date_default_timezone_set('Asia/Shanghai');
         $payModel = new PayOrders();
 
 //        验证post值
-        if(!is_numeric($data['pay_money'])){
+        if (!is_numeric($data['pay_money'])) {
             self::setError([
-                'status_code'=> '500',
-                'message'    => 'The money is not a number',
+                'status_code' => '500',
+                'message' => '金额格式错误！',
             ]);
             return false;
         }
 
-        $distribution = bcdiv($data['pay_money'],$data['send_number'],2);
-        if ($distribution <1) {
+        //判断敏感词
+        $is_mg = self::curl_request('http://www.hoapi.com/index.php/Home/Api/check?',['str'=>$data['content'],'token'=>'4be68372707a741d90d38f3474328706']);
+        $is_mg = json_decode($is_mg);
+        if (!$is_mg->status) {
             self::setError([
-                'status_code'=> '500',
-                'message'    => 'The send_number is not enough',
+                'status_code' => '500',
+                'message' => '检测到敏感字符！',
+            ]);
+            return false;
+        }
+
+        //判断每个红包均分金额是否大于1元
+        $distribution = bcdiv($data['pay_money'], $data['send_number'], 2);
+        if ($distribution < 1) {
+            self::setError([
+                'status_code' => '500',
+                'message' => '每个红包平均大于1元！',
             ]);
             return false;
         }
 
         //阿拉伯数字转中文数字
-        $audioService =  new AudioService();
+        $audioService = new AudioService();
         $content = $audioService::chinanum($data['content']);
-        $data['content'] = implode('',$content);
+        $data['content'] = implode('', $content);
 
         // 判断是否存在超时订单
-        $overtime_data = $payModel->where(['user_id'=>$uid,'is_pay'=>0])->where('end_time','<',time())->field('red_id,order_sn')->select();
+        $overtime_data = $payModel->where(['user_id' => $uid, 'is_pay' => 0])->where('end_time', '<', time())->field('red_id,order_sn')->select();
 
         if (!empty($overtime_data)) {
-            foreach ($overtime_data as $k=>$v) {
-                $payModel->where(['red_id'=> $v['red_id'],'order_sn' => $v['order_sn']])->update(['is_pay' => -1]);
+            foreach ($overtime_data as $k => $v) {
+                $payModel->where(['red_id' => $v['red_id'], 'order_sn' => $v['order_sn']])->update(['is_pay' => -1]);
             }
         }
 
-        $order_sn ='WJBS'.date('YmdHis').rand(1000,9999);
-
+        $order_sn = 'WJBS' . date('YmdHis') . rand(1000, 9999);
 
 
         //文字转拼音
         $pinyin = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
-        $content_pinyin = implode(',',$pinyin->convert($data['content']));
+        $content_pinyin = implode(',', $pinyin->convert($data['content']));
 
         //数据准备
         $save_data = [
-            'user_id'   => $uid,
-            'type'      => $data['type'],
-            'se_money'  => $data['pay_money'],
+            'user_id' => $uid,
+            'type' => $data['type'],
+            'se_money' => $data['pay_money'],
             'se_number' => $data['send_number'],
-            'voice'     => $data['voice_url']??'',
-            'content'   => $data['content'],
+            'voice' => $data['voice_url'] ?? '',
+            'content' => $data['content'],
             'content_pinyin' => $content_pinyin,
             'pay_money' => $data['pay_money'],
-            'trade_no'  => '',
-            'receive'   => 0,
+            'trade_no' => '',
+            'receive' => 0,
             'create_time' => time(),
-            'end_time'  => time()+600,
-            'order_sn'  => $order_sn,
-            'balance'   => 0,
+            'end_time' => time() + 600,
+            'order_sn' => $order_sn,
+            'balance' => 0,
+            'duration' => $data['duration'] ?? '',
         ];
 
         //储存数据
         $list = $payModel::savePayOrder($save_data);
         if (!is_numeric($list['data'])) {
             self::setError([
-                'status_code'=> '500',
-                'message'    => 'Add data failure'
+                'status_code' => '500',
+                'message' => '网络错误，请重试！'
             ]);
             return false;
         }
 
         //生成二维码并保存路径
-        //$born_url_model = new UserService();
-
-        $born_url = UserService::AD_QR($list['data']);
+        $born_url = UserService::QR_code($list['data']);
 
         if ($born_url != false) {
-            $up_url = Db::name('send')->where('red_id',$list['data'])->setField('qr_url',$born_url);
+            $up_url = Db::name('send')->where('red_id', $list['data'])->setField('qr_url', $born_url);
             if (!$up_url) {
                 self::setError([
-                    'status_code'=> '500',
-                    'message'    => 'update data failure'
+                    'status_code' => '500',
+                    'message' => '网络错误，请重试！'
                 ]);
                 return false;
             }
         }
 
         $redAllot = new RedAllotService;
-        $money_arr =$redAllot::getRedArray($data['pay_money'],$data['send_number'],1);
+        $money_arr = $redAllot::getRedArray($data['pay_money'], $data['send_number'], 1);
 
 
         //遍历$money_arr，把数组每一项加入队列，
         $redis = RedisClient::getHandle(0);
-        foreach ($money_arr as $k=>$v) {
-            $redis->pushList('red_money:'.$list['data'],$v);
+        foreach ($money_arr as $k => $v) {
+            $redis->pushList('red_money:' . $list['data'], $v);
         }
 
         //获取用户信息
-        $user_data = Db::name('users')->where('user_id',$uid)->field('user_openid')->find();
+        $user_data = Db::name('users')->where('user_id', $uid)->field('user_openid')->find();
         $openid = $user_data['user_openid'];
 
-//        //查看余额,余额足够则不唤起支付
-//        if ($user_data['user_balance'] > 0) {
-//            $s_money = $user_data['user_balance'] - $data['pay_money'];
-//            if ($s_money >= 0) {
-//                // 启动事务
-//                Db::startTrans();
-//                try{
-//                    Db::name('send')->where(['user_id'=>$uid,'order_sn'=>$order_sn])->update(['is_success'=>1,'balance'=>$s_money]);
-//                    Db::name('user')->where('user_id',$uid)->setDec('user_balance', $data['pay_money']);
-//                    // 提交事务
-//                    Db::commit();
-//                    return true;
-//                } catch (\Exception $e) {
-//                    // 回滚事务
-//                    Db::rollback();
-//                    return false;
-//                }
-//            }
-//        }elseif($s_money < 0){
-//            Db::startTrans();
-//            try{
-//                Db::name('send')->where(['user_id'=>$uid,'order_sn'=>$order_sn])->update(['is_success'=>1,'balance'=>$user_data['user_balance']]);
-//                Db::name('user')->where('user_id',$uid)->update(['user_balance'=> 0]);
-//                // 提交事务
-//                Db::commit();
-//                $money = abs($s_money);
-//            } catch (\Exception $e) {
-//                // 回滚事务
-//                Db::rollback();
-//                return false;
-//            }
-//        }
-
         //是否开启测试模式
-        $proprotion = Db::name('backstage')->where('id',8)->find();
+        $proprotion = Db::name('backstage')->where('id', 8)->find();
         if ($proprotion['item']) {
-            Log::write('真实模式:'.$proprotion['item']);
+            Log::write('真实模式:' . $proprotion['item']);
             $total = $data['pay_money'];
-        }else{
-            Log::write('测试模式:'.$proprotion['item']);
+        } else {
+            Log::write('测试模式:' . $proprotion['item']);
             $total = 0.01;
         }
 
         //获取config
-        $proportion = Db::name('backstage')->where('id',11)->select();
+        //$proportion = Db::name('backstage')->where('id',11)->find();
 
 
 //        //获取指定微信支付和提现配置
@@ -196,11 +174,11 @@ class PayService extends BaseService
 
         //统一下单
         $payData = [
-            'body'    => '拜年智力',
-            'subject'    => '微聚',
-            'order_no'    => $order_sn,
+            'body' => '拜年智力',
+            'subject' => '微聚',
+            'order_no' => $order_sn,
             'timeout_express' => time() + 600,// 表示必须 600s 内付款
-            'amount'    =>$total,// 微信沙箱模式，需要金额固定为3.01,$money||$data['pay_money']
+            'amount' => $total,// 微信沙箱模式，需要金额固定为3.01,$money||$data['pay_money']
             'return_param' => '123',
             'client_ip' => isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '127.0.0.1',// 客户地址
             'openid' => $openid,
@@ -219,17 +197,44 @@ class PayService extends BaseService
             $res = MessageService::template($info);*/
             $ret['red_id'] = $list['data'];
             return $ret;
-
-
         } catch (PayException $e) {
             echo $e->errorMessage();
             exit;
         }
 
-
-
     }
 
-
-
+    public static function curl_request($url, $post = '', $cookie = '', $returnCookie = 0)
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)');
+        curl_setopt($curl, CURLOPT_FOLLOWLOCATION, 1);
+        curl_setopt($curl, CURLOPT_AUTOREFERER, 1);
+        curl_setopt($curl, CURLOPT_REFERER, "http://XXX");
+        if ($post) {
+            curl_setopt($curl, CURLOPT_POST, 1);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($post));
+        }
+        if ($cookie) {
+            curl_setopt($curl, CURLOPT_COOKIE, $cookie);
+        }
+        curl_setopt($curl, CURLOPT_HEADER, $returnCookie);
+        curl_setopt($curl, CURLOPT_TIMEOUT, 10);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $data = curl_exec($curl);
+        if (curl_errno($curl)) {
+            return curl_error($curl);
+        }
+        curl_close($curl);
+        if ($returnCookie) {
+            list($header, $body) = explode("\r\n\r\n", $data, 2);
+            preg_match_all("/Set\-Cookie:([^;]*);/", $header, $matches);
+            $info['cookie'] = substr($matches[1][0], 1);
+            $info['content'] = $body;
+            return $info;
+        } else {
+            return $data;
+        }
+    }
 }

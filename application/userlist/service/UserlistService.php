@@ -13,10 +13,9 @@ class UserlistService extends BaseService
     public static function user($user)
     {
         if(empty($user['user_name'])){
-            $res = Db::name('users')
-                ->where('is_del', 0)->page($user['page'],10)->order('user_id desc')->select();
+            $res = Db::name('users')->page($user['page'],10)->order('user_id desc')->select();
             if($res){
-                $data['total'] = Db::name('users')->where('is_del',0)->count();
+                $data['total'] = Db::name('users')->count();
                 $data['list'] = $res;
                 return $data;
             }else {
@@ -31,12 +30,11 @@ class UserlistService extends BaseService
             }else{
                 $res = Db::name('users')
                     ->where('user_name','like','%'.$user['user_name'].'%')
-                    ->where('is_del',0)
                     ->page($user['page'],10)
                     ->order('user_id desc')
                     ->select();
                 if ($res) {
-                    $data['total'] = Db::name('users')->where('is_del',0)->where('user_name','like','%'.$user['user_name'].'%')->count();
+                    $data['total'] = Db::name('users')->where('user_name','like','%'.$user['user_name'].'%')->count();
                     $data['list'] = $res;
                     return $data;
                 }elseif(empty($res)){

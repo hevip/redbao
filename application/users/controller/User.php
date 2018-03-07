@@ -96,7 +96,9 @@ class User extends Api
     }
 
     public function QR_code(){
-        $data = UserService::AD_QR();  //原QR_code
+        $red = Request::instance()->post();
+        $res_id = $red['red_id'];
+        $data = UserService::QR_code($res_id);  //原QR_code
         if($data){
             return $this->responseSuccess($data);
         }else{
@@ -173,6 +175,19 @@ class User extends Api
     //二维码后台删除
     public function adQr_del($id){
         $result = UserService::adQr_del($id);
+        if($result){
+            return $this->responseSuccess($result);
+        }else{
+            return $this->responseError(UserService::getError());
+        }
+    }
+
+    //增加分享次数
+    public function addShareTimes()
+    {
+        $data = Request::instance()->post();
+        $uid = $this->auth['user_id']??'';
+        $result = UserService::addShareTimes($uid,$data);
         if($result){
             return $this->responseSuccess($result);
         }else{

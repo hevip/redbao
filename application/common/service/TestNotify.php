@@ -22,7 +22,6 @@ class TestNotify implements PayNotifyInterface
 {
     public function notifyProcess(array $data)
     {
-
         $channel = $data['channel'];
         if ($channel === Config::ALI_CHARGE) {// 支付宝支付
         } elseif ($channel === Config::WX_CHARGE) {// 微信支付
@@ -31,33 +30,30 @@ class TestNotify implements PayNotifyInterface
         } else {
             // 其它类型的通知
         }
-<<<<<<< HEAD
 
-
-
-=======
         Log::write('微信支付回调内容：'.json_encode($data));
->>>>>>> a6f78cb931f3d7a2dec338c45a040209cd284dbe
+
         //获取用户信息
-        $user_data = Db::name('users')->where('user_openid',$data['buyer_id'])->field('user_id')->find();
+        $user_data = Db::name('users')->where('user_openid',$data['openid'])->field('user_id')->find();
 
         //查询订单
-        $order_info = Db::name('send')->where(['user_id'=>$user_data['user_id'],'order_sn'=> $data['order_no'],'is_pay' => 0])->field('id,order_sn,pay_money')->find();
+        $order_info = Db::name('send')->where(['user_id'=>$user_data['user_id'],'order_sn'=> $data['out_trade_no']])->field('order_sn,pay_money')->find();
         //不存在订单
 
         if (empty($order_info)) {
             return false;
         }
 
+        /*$pay_money = bcdiv($data['total_fee'],100,2);
         //判断金额是否相同
-        if ($order_info['pay_money'] != $data['amount']) {
+        if ($order_info['pay_money'] != $pay_money) {
             return false;
-        }
+        }*/
 
         Db::startTrans();
         try{
             //更改状态
-            Db::name('send')->where(['order_sn'=>$data['order_no']])->setField('is_pay',1);
+            Db::name('send')->where(['order_sn'=>$order_info['order_sn']])->update(['trade_no' => $data['transaction_id'],'is_pay' => 1]);
             Db::commit();
             return true;
         } catch (\Exception $e) {

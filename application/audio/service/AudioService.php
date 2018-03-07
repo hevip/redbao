@@ -155,6 +155,12 @@ class AudioService extends BaseService
 
             //广告红包领取
             if($redis->in_set('adv_reds',$data['red_id'])){
+                if($userInfo['share_times']==0){
+                    return [
+                        'result'=>false,
+                        'message'=>'请转发获取领取机会'
+                    ];
+                }
 
                 $type = Db::name('backstage')->where(['id'=>15])->value('item');
 
@@ -217,6 +223,7 @@ class AudioService extends BaseService
                 $receData['re_money']= $money;
                 $receData['voice_url']= $speech['voice_url'];
                 $receData['red_id'] = $data['red_id'];
+                $receData['voice_length'] = $data['duration'];
                 $receData['is_success']=1;
                 $receData['create_time']= time();
                 Db::name('received')->insert($receData);//插入领取表

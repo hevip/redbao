@@ -18,31 +18,47 @@ use think\Log;
 
 class RedAllotService extends Controller
 {
-    public static function getRedArray($money,$num,$type)
+    public static function getRedArray($money, $num, $type)
     {
-        if ($type) {
-            //生成随机红包并加入redis
-            $total = $money;
-            $min=0.01;//每个人最少能收到0.01元
-            $money_arr=array(); //存入随机红包金额结果
+        //随机红包
+        if ($type == 1) {
+            $money_arr = self::redMoneys($money,$num);
 
-            for ($i=1;$i<$num;$i++)
-            {
-                $safe_total=($total-($num-$i)*$min)/($num-$i);//随机安全上限
-                $money= mt_rand($min*100,$safe_total*100)/100;
-                $total=$total-$money;
-                $money_arr[]= $money;
-            }
-            $money_arr[] = round($total,2);
+        } else{
+            //平均分配
 
-        }else{
-            $newMoney = bcdiv($money,$num,2);
-            for ($i=1;$i<$num;$i++)
-            {
-                $money_arr[]= $newMoney;
-            }
-            $money_arr[] = round($newMoney,2);
         }
         return $money_arr;
+    }
+
+    //随机红包分配
+    public static function randFloat($min,$max)
+    {
+        $num = $min+mt_rand()/mt_getrandmax()*($max-$min);
+        return sprintf("%2f",$num);
+    }
+    public static function redMoneys($total,$num){
+        $res = [];
+        $i=1;
+        while($num>0){
+            $i++;
+            if($num ==1 ){
+                $num--;
+                array_push($res,$total);
+            }else{
+                $min = 0.01;
+                $max = $total/$num*2;
+                $money =  sprintf('%2f',self::randFloat(0,1)*$max);
+                if($money<=$min){
+                    $money = 0.01;
+                }
+                $money = floor($money*100)/100;
+
+                $num-=1;
+                $total = (float)bcsub($total,$money,2);
+                array_push($res,$money);
+            }
+        }
+        return $res;
     }
 }

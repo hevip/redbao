@@ -62,8 +62,12 @@ class CashService extends BaseService
 
         //是否搜索时间
         if (isset($data['start_time']) and isset($data['end_time'])) {
+            //总条数
+            $total = Db::name('cash_log')->where('create_time','between',$data['start_time'].','.$data['end_time'])->where($condition)->count();
             $showData = Db::name('cash_log')->alias('c')->join('wj_users u','c.user_id = u.user_id')->where('create_time','between',$data['start_time'].','.$data['end_time'])->where($condition)->order('create_time desc')->limit($start_page,10)->field('u.user_name,cash_id,c.user_id,cash_money,server_money,pay_no,trade_no,c.create_time')->select();
         }else{
+            //总条数
+            $total = Db::name('cash_log')->where($condition)->count();
             $showData = Db::name('cash_log')->alias('c')->join('wj_users u','c.user_id = u.user_id')->where($condition)->order('create_time desc')->limit($start_page,10)->field('u.user_name,cash_id,c.user_id,cash_money,server_money,pay_no,trade_no,create_time,is_success,c.create_time')->select();
         }
 
@@ -74,8 +78,7 @@ class CashService extends BaseService
             ]);
             return false;
         }
-        //总条数
-        $total = Db::name('cash_log')->where($condition)->count();
+
         $showData['total'] = $total;
         return $showData;
     }

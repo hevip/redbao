@@ -8,6 +8,7 @@ use think\Log;
 
 class MessageService extends BaseService
 {
+    //是否推送
     public static function message($uid,$status)
     {
         $validate = validate('app\message\validate\Message');
@@ -47,17 +48,17 @@ class MessageService extends BaseService
     public static function Img()
     {
         $img = "C:\\Users\\Administrator\\Desktop\\2.jpg";
-//        var_dump($img['tmp_name']);exit;
         $ACCESS_TOKEN = UserService::ac_token();
         $upload = 'https://api.weixin.qq.com/cgi-bin/media/upload?access_token='.$ACCESS_TOKEN.'&type=image';
 //        $image = array('media'=>'@'.$img);
         $image = array('media'=>new \CURLFile($img,'image/jpg'));
         $res = UserService::https_request($upload,$image);
         $res = json_decode($res, true);
-//        dump($res);exit;
+//        dump($res);exit;0
         return $res;
     }
 
+    //小程序卡片
     public static function serviceMessage($uid,$info)
     {
        if(!is_numeric($info['red_id'])){
@@ -65,15 +66,10 @@ class MessageService extends BaseService
             return false;
         }
         $openid = Db::name('users')->where('user_id',$uid)->value('user_openid');
-//        if($user['is_push'] == 0) {
-//            self::setError(['status_code' => 500, 'message' => '未开启消息推送']);
-//            return false;
-//        }
         $ACCESS_TOKEN = UserService::ac_token();
         //发送小程序卡片
         $data = array(
             'touser' => $openid,
-//            'touser' => 'o9ZC35bbKoGTWZLt2xGzm5NPbp6E',
             'msgtype' => 'miniprogrampage',
             'miniprogrampage' => [
                 'title' => $info['title'],
@@ -104,16 +100,21 @@ class MessageService extends BaseService
             return false;
         }
     }
+
+    //模板消息
     public static function template($info,$uid)
     {
         $ACCESS_TOKEN =UserService::ac_token();
         $res = Db::name('send')->where('red_id',$info['red_id'])->find();
         Db::name('send')->where('red_id',$info['red_id'])->setField('is_pay',1);
         $openid = Db::name('users')->where('user_id',$uid)->value('user_openid');
+        //后续逻辑发布
+        $template_id = Db::name('template')->where(['red_type'=>$res['type']])->value('template_id');
         if($res['type'] == 2){
+
             $data = array(
                 'touser' => $openid,
-                'template_id' => "SSxUVgOKZW85YydzlwTT4h7wsS_Lwydgv-u5ESMS_Ng",
+                'template_id' => $template_id,
                 'form_id'=>$info['form_id'],
                 'page'=>'pages/recive/recive?red_id='.$info['red_id'],
                 'data'=>[
@@ -125,7 +126,7 @@ class MessageService extends BaseService
         }else{
             $data = array(
                 'touser' =>$openid,
-                'template_id' => "YHa9WVQfj_0TkNCVDCartMQ50lGA0IjT4K-GJ56IAwE",
+                'template_id' => $template_id,
                 'form_id'=>$info['form_id'],
                 'page'=>'pages/recive/recive?red_id='.$info['red_id'],
                 'data'=>[
@@ -153,6 +154,7 @@ class MessageService extends BaseService
         }
     }
 
+    //CURL请求
     public  static function Http($url,$data,$type="http"){
         $curl = curl_init();
         if ($type == "json"){
@@ -173,25 +175,69 @@ class MessageService extends BaseService
         return $output;
     }
 
-
-    public static function word()
+    public static function words($info)
     {
-        $res = Db::name('words')->where('pid',0)->select();
-//        var_dump($res);exit;
-        foreach($res as $k=>$v){
-            $res[$k]['content'] = Db::name('words')->where('pid',$v['id'])->select();
-        }
-//        var_dump($res);exit;
-        if($res){
-            return $res;
-        }elseif(empty($res))
+        if(!is_numeric($info['page']))
         {
-            return ['msg'=>'暂无数据'];
-        }else{
-            self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+            self::setError(['status_code' => 500, 'message' => 'page参数错误！']);
             return false;
         }
+        //页数
+        $page = $info['page'];
+        if(empty($page)|| $page <= 1){
+            $start_page = 0;
+        }else{
+            $start_page = ($page-1)*10;
+        }
+        //搜索名称
+        if(!empty($info['title'])){
+            $validate = validate('app\message\validate\Word');
+            if(!$validate->check($info)){
+                self::setError([
+                    'status_code'=>4105,
+                    'message'    =>$validate->getError()
+                ]);
+                return false;
+            }
+            $res = Db::name('words')->where('pid',0)->where('title','like',$info['title'])->select();
+            foreach($res as $k=>$v){
+                $res[$k]['content'] = Db::name('words')->where('pid',$v['id'])->limit($start_page,10)->select();
+            }
+            if($res){
+                $result['total'] = Db::name('words')->where('title','like',$info['title'])->count();
+                $result['res'] = $res;
+                return $result;
+            }elseif(empty($res))
+            {
+                return ['msg'=>'暂无数据'];
+            }else{
+                self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+                return false;
+            }
+        }
+
+            $res = Db::name('words')->where('pid',0)->select();
+            foreach($res as $k=>$v){
+                $res[$k]['content'] = Db::name('words')->where('pid',$v['id'])->limit($start_page,10)->select();
+            }
+            if($res){
+                $result['total'] = Db::name('words')->count();
+                $result['res'] = $res;
+                return $result;
+            }elseif(empty($res))
+            {
+                return ['msg'=>'没有找到相关数据'];
+            }else{
+                self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+                return false;
+            }
+
     }
+
+
+
+
+
 
     //添加口令
     public static function postWord($info)
@@ -229,26 +275,88 @@ class MessageService extends BaseService
 
     }
 
-    //删除口令
+    //删除或修改口令
     public static function del_word($info)
     {
         if(!is_numeric($info['id'])){
             self::setError(['status_code' => 500, 'message' => 'id参数非法']);
             return false;
         }
-        $id = Db::name('words')->where('pid',$info['id'])->find();
-        if($id){
-            self::setError(['status_code' => 500, 'message' => '请先删除下面的子类！']);
+        if($info['type'] != 0 && $info['type'] != 1){
+            self::setError(['status_code' => 500, 'message' => 'type参数非法']);
             return false;
+        }
+        if($info['type'] == 0){
+            $id = Db::name('words')->where('pid',$info['id'])->find();
+            if($id){
+                self::setError(['status_code' => 500, 'message' => '请先删除下面的子类！']);
+                return false;
+            }else{
+                $res = Db::name('words')->where('id',$info['id'])->delete();
+                if($res){
+                    return ['msg'=>'删除成功'];
+                }else{
+                    self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+                    return false;
+                }
+            }
         }else{
-            $res = Db::name('words')->where('id',$info['id'])->delete();
+            $validate = validate('app\message\validate\Word');
+            if(!$validate->check($info)){
+                self::setError([
+                    'status_code'=>4105,
+                    'message'    =>$validate->getError()
+                ]);
+                return false;
+            }
+            $res = Db::name('words')->where('id',$info['id'])->setField('title',$info['content']);
             if($res){
-                return ['msg'=>'删除成功'];
+                return ['msg'=>'修改成功'];
             }else{
                 self::setError(['status_code' => 500, 'message' => '服务器忙！']);
                 return false;
             }
         }
+    }
 
+    //修改弹幕
+    public static function up_barrage($info)
+    {
+        $data['content'] = $info['content'];
+        $data['color'] = $info['color'];
+        $data['speed'] = $info['speed'];
+        $data['create_time'] = time();
+        $res = Db::name('notes')->where('id',$info['id'])->update($data);
+        if($res){
+            return ['msg'=>' 修改成功！'];
+        }else{
+            self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+            return false;
+        }
+
+    }
+
+    //弹幕开关
+    public static function is_play($info)
+    {
+        if (!is_numeric($info['id'])) {
+            self::setError(['status_code' => 500, 'message' => '参数有误！']);
+            return false;
+        }
+        if($info['is_play'] != 0  &&  $info['is_play'] != 1){
+            self::setError(['status_code' => 500, 'message' => '参数有误！']);
+            return false;
+        }
+        $res = Db::name('notes')->where('id', $info['id'])->setField('is_play', $info['is_play']);
+        if ($res) {
+            if($info['is_play'] == 0){
+                return ['msg'=>'弹幕已开启'];
+            }else{
+                return ['msg'=>'弹幕已关闭'];
+                }
+        }else{
+            self::setError(['status_code' => 500, 'message' => '服务器忙！']);
+            return false;
+        }
     }
 }

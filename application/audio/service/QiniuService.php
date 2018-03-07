@@ -165,6 +165,7 @@ class QiniuService extends BaseService
             Log::write('拼音结果是:'.$content_pinyin);
             $speechData['persistentid'] = $data['voice_id'];
             $speechData['voice_url'] = $data['voice_url'];
+            //$speechData['voice_']
             $speechData['content'] = $content_pinyin;
             $speechData['create_time']=time();
         }else{
@@ -206,6 +207,7 @@ class QiniuService extends BaseService
         Db::name('speech')->insert($speechData);
         $params['persistentid'] = $data['voice_id'];
         $params['red_id']       = $data['red_id'];
+        $params['duration']     = $data['duration'];
         return AudioService::getSpeechRes($params,$uid);
 
     }

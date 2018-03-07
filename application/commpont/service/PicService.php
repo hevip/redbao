@@ -81,7 +81,9 @@ class PicService extends \app\common\service\BaseService
 	{
 		// 获取表单上传文件 例如上传了001.jpg
         $file = Request::instance()->file('upload');//name="image"
-
+        $filePath = $file->getInfo('tmp_name');
+        //var_dump($file);
+        //var_dump($filePath);die;
         $accessKey = config('qiniu_accessKey');
         $secretKey = config('qiniu_secretKey');
         $bucket = config('qiniu_bucket');
@@ -90,7 +92,7 @@ class PicService extends \app\common\service\BaseService
         $upToken = $qiniu->uploadToken($bucket);
         $upload = new UploadManager();
         $key = 'ad'.time();
-        $res = $upload->put($upToken,$key,$file);
+        $res = $upload->putFile($upToken,$key,$filePath);
         $filePath = config('qiniu_bucket_domain').DS.$res[0]['key'];
         //var_dump($re);die;
         return $filePath;

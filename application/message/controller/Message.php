@@ -10,11 +10,11 @@ namespace app\message\controller;
 
 use app\common\controller\Api;
 use app\message\service\MessageService;
+use app\commpont\controller\Pic;
 use think\Request;
 
 class Message extends Api
 {
-
     public function index()
     {
         $uid = $this->auth['user_id'] ?? '';
@@ -83,12 +83,11 @@ class Message extends Api
         return $obj;
     }
 
-    //口令展示
-    public function word()
+    //后台口令展示
+    public function words()
     {
-//        $uid = $this->auth['user_id'] ?? '';
-//        $info = Request::instance()->post();
-        $res = MessageService::word();
+        $info = Request::instance()->post();
+        $res = MessageService::words($info);
         if($res){
             return $this->responseSuccess($res);
         }else{
@@ -108,12 +107,37 @@ class Message extends Api
         }
     }
 
-    //口令删除
+    //口令删除或修改
     public function del_word()
     {
 //        $uid = $this->auth['user_id'] ?? '';
         $info = Request::instance()->post();
         $res = MessageService::del_word($info);
+        if($res){
+            return $this->responseSuccess($res);
+        }else{
+            return $this->responseError(MessageService::getError());
+        }
+    }
+
+
+    public function up_barrage()
+    {
+//        $uid = $this->auth['user_id'] ?? '';
+        $info = Request::instance()->post();
+        $res = MessageService::up_barrage($info);
+        if($res){
+            return $this->responseSuccess($res);
+        }else{
+            return $this->responseError(MessageService::getError());
+        }
+    }
+
+    public function is_play()
+    {
+//        $uid = $this->auth['user_id'] ?? '';
+        $info = Request::instance()->post();
+        $res = MessageService::is_play($info);
         if($res){
             return $this->responseSuccess($res);
         }else{

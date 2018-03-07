@@ -113,6 +113,11 @@ class RedService extends BaseService
                $redInfo['is_revice'] = false;
                $redInfo['re_money'] = 0;
            }
+           if($redis->in_set('adv_reds',$red_id)){
+                $redInfo['is_ad'] = true;
+           }else{
+               $redInfo['is_ad'] = false;
+           }
            return $redInfo;
        }else{
            self::setError([

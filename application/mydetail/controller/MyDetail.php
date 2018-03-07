@@ -14,12 +14,10 @@ use think\Request;
 
 class MyDetail extends Api
 {
-
+    //发包明细
     public function send()
     {
-
         $uid = $this->auth['user_id'] ?? '';
-
         $res = MyDetailService::send($uid);
         if($res){
             return $this->responseSuccess($res);
@@ -27,7 +25,7 @@ class MyDetail extends Api
             return $this->responseError(MyDetailService::getError());
         }
     }
-
+    //收包明细
     public function receive()
     {
         $uid = $this->auth['user_id'] ?? '';
@@ -40,13 +38,23 @@ class MyDetail extends Api
         }
     }
 
-    //提现
+    //提现明细
     public function cash()
     {
-
         $uid = $this->auth['user_id'] ?? '';
-
         $res = MyDetailService::cash($uid);
+        if($res){
+            return $this->responseSuccess($res);
+        }else{
+            return $this->responseError(MyDetailService::getError());
+        }
+    }
+
+    //退款明细
+    public function refund()
+    {
+        $uid = $this->auth['user_id'] ?? '';
+        $res = MyDetailService::refund($uid);
         if($res){
             return $this->responseSuccess($res);
         }else{
