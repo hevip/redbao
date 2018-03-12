@@ -8,6 +8,7 @@
 
 namespace app\message\controller;
 
+
 use app\message\service\WordsService;
 use think\Controller;
 use think\Response;

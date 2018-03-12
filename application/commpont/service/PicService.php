@@ -115,7 +115,7 @@ class PicService extends \app\common\service\BaseService
         $files = Request::instance()->file('image'); //name="image[]"
         foreach($files as $file){
             // 移动到框架应用根目录/public/uploads/ 目录下
-            $info = $file->validate(['size'=>1000000,'ext'=>'jpg,png,gif'])->move(self::$uploadPath);
+            $info = $file->validate(['size'=>1000000,'ext'=>'jpg,png,gif,mp3'])->move(self::$uploadPath);
             if($info){
                 // 成功上传后 获取上传信息
                 // 输出 jpg

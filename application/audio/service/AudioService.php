@@ -63,16 +63,10 @@ class AudioService extends BaseService
         if($res['err_no']==0){
             //拿到逗号前面的字符，然后转换成拼音
             $str = $res['result'][0];
-            Log::write('百度语音识别结果：'.$str);
-            /*Log::write('百度语音识别结果：'.$str);
-	        preg_match_all("/([\x{4e00}-\x{9fa5}]+)/u", $str, $match);
-	        $content = $match[0][0];
-            Log::write('裁剪后的结果：'.$content);*/
             $str = urlencode($str);
             $str=preg_replace("/(%7E|%60|%21|%40|%23|%24|%25|%5E|%26|%27|%2A|%28|%29|%2B|%7C|%5C|%3D|\-|_|%5B|%5D|%7D|%7B|%3B|%22|%3A|%3F|%3E|%3C|%2C|\.|%2F|%A3%BF|%A1%B7|%A1%B6|%A1%A2|%A1%A3|%A3%AC|%7D|%A1%B0|%A3%BA|%A3%BB|%A1%AE|%A1%AF|%A1%B1|%A3%FC|%A3%BD|%A1%AA|%A3%A9|%A3%A8|%A1%AD|%A3%A4|%A1%A4|%A3%A1|%E3%80%82|%EF%BC%81|%EF%BC%8C|%EF%BC%9B|%EF%BC%9F|%EF%BC%9A|%E3%80%81|%E2%80%A6%E2%80%A6|%E2%80%9D|%E2%80%9C|%E2%80%98|%E2%80%99)+/",'',$str);
             $str=urldecode($str);//将过滤后的关键字解码
             $content = implode('',self::chinanum($str));
-            Log::write('裁剪后的结果：'.$content);
             return $content;
 
         }else{
@@ -118,11 +112,6 @@ class AudioService extends BaseService
 
         if($redis->in_set('red_package:'.$data['red_id'],$uid))
         {
-            /*self::setError([
-                'status_code'=>4104,
-                'message'    => '您已经领取过了'
-            ]);
-            return false;*/
             return [
                 'result'=>false,
                 'message'=>'您已经领取过了'
@@ -233,7 +222,6 @@ class AudioService extends BaseService
                     'user_id'=>$uid
                 ])->setInc('user_balance',$money);*/
                 $user_balance = bcadd($userInfo['user_balance'],$money,2);
-                Log::write('最新余额:'.$user_balance);
                 Db::name('users')->where([
                     'user_id'=>$uid
                 ])->setField('user_balance',$user_balance);
@@ -273,14 +261,14 @@ class AudioService extends BaseService
        if(count($a)!=count($b)){
            return false;
        }
-       Log::write('输入的数组：'.$content_a);
-       Log::write('红包的数组：'.$content_b);
+//       Log::write('输入的数组：'.$content_a);
+//       Log::write('红包的数组：'.$content_b);
        $rate = Db::name('backstage')->where(['id'=>10])->value('item');
        $rate = (float)$rate/100;
        $c  = array_intersect($a,$b);
-       Log::write('识别的交集是：'.json_encode($c));
+//       Log::write('识别的交集是：'.json_encode($c));
        $rateReal = count($c)/count($b);
-       Log::write('通过率是：'.$rateReal);
+//       Log::write('通过率是：'.$rateReal);
        if($rateReal>=$rate){
            return true;
        }else{

@@ -10,8 +10,9 @@ namespace app\message\controller;
 
 use app\common\controller\Api;
 use app\message\service\MessageService;
-use app\commpont\controller\Pic;
 use think\Request;
+use think\cache\driver\Redis;
+
 
 class Message extends Api
 {

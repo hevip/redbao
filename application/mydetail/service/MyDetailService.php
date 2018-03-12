@@ -64,6 +64,7 @@ class MyDetailService extends BaseService
     //退款明细
     public static function refund($uid)
     {
+//        dump($uid);exit;
         $res = Db::name('refund')->where('user_id',$uid)->field('refund_money,refund_time')->order('refund_time desc')->limit(10)->select();
         if($res){
             return $res;
@@ -193,6 +194,7 @@ class MyDetailService extends BaseService
             ->limit($start_page,10)
             ->field('u.user_name,s.red_id,s.user_id,s.se_money,s.se_number,s.pay_money,s.voice,s.is_pay,s.type,s.content,s.qr_url,s.create_time')
             ->select();
+//        var_dump($showData);exit;
         return $showData;
     }
 

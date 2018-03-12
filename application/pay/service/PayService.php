@@ -40,7 +40,7 @@ class PayService extends BaseService
             ]);
             return false;
         }
-
+        var_dump(config('wxpay'));exit;
         //判断敏感词
         $is_mg = self::curl_request('http://www.hoapi.com/index.php/Home/Api/check?',['str'=>$data['content'],'token'=>'4be68372707a741d90d38f3474328706']);
         $is_mg = json_decode($is_mg);
@@ -65,6 +65,7 @@ class PayService extends BaseService
         //阿拉伯数字转中文数字
         $audioService = new AudioService();
         $content = $audioService::chinanum($data['content']);
+
         $data['content'] = implode('', $content);
 
         // 判断是否存在超时订单
@@ -82,6 +83,7 @@ class PayService extends BaseService
         //文字转拼音
         $pinyin = new Pinyin('Overtrue\Pinyin\MemoryFileDictLoader');
         $content_pinyin = implode(',', $pinyin->convert($data['content']));
+
 
         //数据准备
         $save_data = [
@@ -104,6 +106,7 @@ class PayService extends BaseService
 
         //储存数据
         $list = $payModel::savePayOrder($save_data);
+
         if (!is_numeric($list['data'])) {
             self::setError([
                 'status_code' => '500',

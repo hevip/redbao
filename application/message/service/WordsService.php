@@ -30,7 +30,7 @@ class WordsService extends BaseService
     {
         $res = Db::name('notes')->where('is_play',0)->order('create_time desc')->limit(2)->select();
         $data = [];
-        $data['speed'] = 5;
+        $data['speed'] = $res['speed'];
         if(!empty($res)){
 
             $data['list'] = $res;

@@ -11,6 +11,8 @@ namespace app\mydetail\controller;
 use app\common\controller\Api;
 use app\mydetail\service\MyDetailService;
 use think\Request;
+use think\Db;
+use think\cache;
 
 class MyDetail extends Api
 {
